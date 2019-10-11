@@ -1,5 +1,5 @@
 //
-//  PSAdditionalData.swift
+//  PSConstants.swift
 //  
 //
 //  Created by Tim Morse  on 10/7/19.
@@ -7,12 +7,12 @@
 
 import Foundation
 
-public enum PactSafeHostNames: String {
+public enum PSHostName: String {
     case activityAPI = "pactsafe.io"
     case restAPI = "api.pactsafe.com"
 }
 
-public enum ActivityEvents: String {
+public enum PSActivityEvent: String {
     case agreed = "agreed"
     case displayed = "displayed"
     case updated = "updated"
@@ -22,7 +22,7 @@ public enum ActivityEvents: String {
 }
 
 /// Alerts the style of the clickwrap that is loaded.
-public enum ClickWrapStyle: String {
+public enum PSClickWrapStyle: String {
     case checkbox = "checkbox"
     case combined = "combined"
     case full = "full"
