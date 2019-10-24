@@ -27,3 +27,11 @@ public enum PSClickWrapStyle: String {
     case combined = "combined"
     case full = "full"
 }
+
+public enum PSErrorMessages: String {
+    case constructUrlError = "Error Constructing URL"
+    case sendActivitySendError = "Error in sendActivity and sending data"
+    case contructingURLError = "Issue Constructing URL"
+    case missingSiteAccesId = "Missing Site Access ID"
+    case missingAccessToken = "Missing Access Token"
+}
