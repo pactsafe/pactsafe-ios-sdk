@@ -6,8 +6,9 @@
 //
 
 import Foundation
+import UIKit
 
-public struct CustomData: Codable {
+public struct PSCustomData: Codable {
     
     /// First Name name of the signer, which is a reserved property.
     public var first_name: String?
@@ -15,7 +16,17 @@ public struct CustomData: Codable {
     public var company_name: String?
     public var title: String?
     
-    public init() { }
+    public var iosDeviceName: String
+    public var iosDeviceSystemName: String
+    public var iosDeviceSystemVersion: String
+    public var iosDeviceIdentifierForVendor: String
+    
+    public init() {
+        self.iosDeviceName = UIDevice.current.name
+        self.iosDeviceSystemName = UIDevice.current.systemName
+        self.iosDeviceSystemVersion = UIDevice.current.systemVersion
+        self.iosDeviceIdentifierForVendor = UIDevice.current.identifierForVendor?.uuidString ?? ""
+    }
     
     func escapedCustomData() -> String? {
         let jsonEncoder = JSONEncoder()
@@ -23,12 +34,8 @@ public struct CustomData: Codable {
         
         guard let data = jsonData else { return nil }
         
-        let stringifyData = String(data: data, encoding: .utf8)!
+        let stringifyData = String(data: data, encoding: .utf8)
         
-        if let escapedString = stringifyData.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) {
-            return escapedString
-        } else {
-            return nil
-        }
+        return stringifyData
     }
 }

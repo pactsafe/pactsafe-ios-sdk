@@ -163,12 +163,12 @@ public struct PublishedVersion: Codable {
     let minorVersionNumber: Int
     let isMajorVersion, published: Bool
     let publishedTime, effectiveTime: String
-    let deprecatedTime: JSONNull?
+    let deprecatedTime: String?
     public let body: String
     let protected: Bool
     public let type: String
     let publishedVersionDynamic: Bool
-    let status, changeSummary: String
+    public let status, changeSummary: String
     let notifySigners: Bool
     let tokens: [JSONAny]
     public let title: String
@@ -177,7 +177,7 @@ public struct PublishedVersion: Codable {
     let createdTime, updatedTime: String
     let fields: [JSONAny]
     let downloadEndpoint, editorVersion, fullVersionNumber: String
-    let majorVersion: JSONNull?
+    let majorVersion: String?
     let publishedBy: Int
     let thumbnailLocation, id: String
 
