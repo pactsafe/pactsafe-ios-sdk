@@ -40,7 +40,8 @@ public class PSClickWrap: UIView {
         setupView()
     }
     
-    public func loadContracts(withGroupKey groupKey: String) {
+    // TODO: change filterContractsById to contractIds with filter parameter
+    public func loadContracts(withGroupKey groupKey: String, filterContractsById: [Int]? = []) {
         
         ps.getLatestContracts(byGroupKey: groupKey) { contractsData, error in
             guard let contractsData = contractsData else { return }
@@ -48,35 +49,37 @@ public class PSClickWrap: UIView {
             self.groupId = contractsData.data.id
 
             let acceptanceLanguage = contractsData.data.acceptanceLanguage ?? "By clicking submit, you agree to our {{contracts}}"
-
-            let removeString = acceptanceLanguage.replacingOccurrences(of: "{{contracts}}", with: "")
-            let acceptanceLanguageToReturn = NSMutableAttributedString(string: removeString)
             
-            if #available(iOS 12, *) {
-                DispatchQueue.main.async {
-                    if self.traitCollection.userInterfaceStyle == .dark {
-                        acceptanceLanguageToReturn.addAttribute(.foregroundColor, value: UIColor.white, range: NSRange(location: 0, length: acceptanceLanguageToReturn.length))
-                    } else {
-                        acceptanceLanguageToReturn.addAttribute(.foregroundColor, value: UIColor.black, range: NSRange(location: 0, length: acceptanceLanguageToReturn.length))
-                    }
-                }
-            }
+            let acceptanceLanguageToReturn = self.clean(acceptanceLanguage, remove: "{{contracts}}")
             
             let contractsLinked: NSMutableAttributedString = NSMutableAttributedString()
-
+            
             var index = 0
+            var contractsCount = 0
             for contract in contractsData.data.contracts {
                 index += 1
+                
+                contractsCount = contractsData.data.contracts.count
+                
+                self.contractIds.append(contract.id)
+                self.contractVersions.append(contract.latestVersion)
+                
+                if let filterId = filterContractsById {
+                    if filterId.count > 0 {
+                        contractsCount = filterId.count
+                        if !filterId.contains(contract.id) {
+                            continue
+                        }
+                    }
+                }
 
                 let attributedString = NSMutableAttributedString(string: "\(contract.title)")
                 attributedString.addAttribute(.foregroundColor, value: UIColor.white, range: NSRange(location: 0, length: attributedString.length))
                 attributedString.addAttribute(.link, value: "\(legalCenterUrl)#\(contract.key)", range: NSRange(location: 0, length: contract.title.count))
-                if index != contractsData.data.contracts.count {
+                
+                if index != contractsCount {
                     attributedString.append(NSAttributedString(string: ", "))
                 }
-                
-                self.contractIds.append(contract.id)
-                self.contractVersions.append(contract.latestVersion)
                 
                 contractsLinked.append(attributedString)
             }
@@ -91,10 +94,25 @@ public class PSClickWrap: UIView {
                            customData: PSCustomData?,
                            completionHandler: @escaping (_ data: Data?, _ response: URLResponse?, _ error: Error?) -> Void) {
         
-        ps.sendActivity(signerId: signerId, activityType: .agreed, contractIds: self.contractIds, contractVersions: self.contractVersions, groupId: "\(self.groupId)", emailConfirmation: false, customSignerData: customData) { (data, response, error) in
+        ps.send(signerId: signerId, activityType: .agreed, contractIds: self.contractIds, contractVersions: self.contractVersions, groupId: "\(self.groupId)", emailConfirmation: false, customSignerData: customData) { (data, response, error) in
             completionHandler(data, response, error)
         }
         
+    }
+    
+    private func clean(_ acceptanceLanguage: String, remove dynamicParameter: String) -> NSMutableAttributedString {
+        let removeString = acceptanceLanguage.replacingOccurrences(of: dynamicParameter, with: "")
+        let acceptanceLanguageToReturn = NSMutableAttributedString(string: removeString)
+        DispatchQueue.main.async {
+            if #available(iOS 12, *) {
+                if self.traitCollection.userInterfaceStyle == .dark {
+                    acceptanceLanguageToReturn.addAttribute(.foregroundColor, value: UIColor.white, range: NSRange(location: 0, length: acceptanceLanguageToReturn.length))
+                } else {
+                    acceptanceLanguageToReturn.addAttribute(.foregroundColor, value: UIColor.black, range: NSRange(location: 0, length: acceptanceLanguageToReturn.length))
+                }
+            }
+        }
+        return acceptanceLanguageToReturn
     }
 
     private func setupView() {

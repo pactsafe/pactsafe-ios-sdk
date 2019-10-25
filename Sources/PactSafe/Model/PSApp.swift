@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Network
 
 @available(iOS 10.0, *)
 public class PSApp {
@@ -30,14 +31,14 @@ public class PSApp {
     
     // MARK: - Activity API Methods
     
-    public func sendActivity(signerId: String,
-                             activityType: PSActivityEvent,
-                             contractIds: [Int]?,
-                             contractVersions: [String]?,
-                             groupId: String?,
-                             emailConfirmation: Bool? = false,
-                             customSignerData: PSCustomData?,
-                             completion: @escaping (_ data: Data?, _ response: URLResponse?, _ error: Error?) -> Void) {
+    public func send(signerId: String,
+                     activityType: PSActivityEvent,
+                     contractIds: [Int]?,
+                     contractVersions: [String]?,
+                     groupId: String?,
+                     emailConfirmation: Bool? = false,
+                     customSignerData: PSCustomData?,
+                     completion: @escaping (_ data: Data?, _ response: URLResponse?, _ error: Error?) -> Void) {
         
         // Uses Activity API
         var sendUrlContract = URLComponents()
@@ -230,20 +231,17 @@ public class PSApp {
                     }
                     completion(returnContracts, nil)
                 } catch {
-                    completion([nil], error)
+                    completion([], error)
                 }
             } else {
                 if self.debugMode {
                     debugPrint(error as Any)
                 }
-                completion([nil], error)
+                completion([], error)
             }
         }
     }
     
-    
-    
-
     // MARK: - Private Methods
 
     // MARK: Request Generation
