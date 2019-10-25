@@ -71,14 +71,14 @@ In order to get contracts to load into your clickwrap, you’ll need to use the 
 
 ```swift
 override func viewWillAppear(_ animated: Bool) {
-    super.viewWillAppear(animated)
+	super.viewWillAppear(animated)
 
-    myClickWrap.loadContracts(withGroupKey: "example-mobile-app-group")
+	myClickWrap.loadContracts(withGroupKey: "example-mobile-app-group")
 }
 ```
 
 Once your contracts have loaded, your clickwrap might look something like this:
-![Example Loaded Clickwrap](./Documentation/contracts-clickwrap-loaded.png "User Flows")
+![Example Loaded Clickwrap](./contracts-clickwrap-loaded.png "User Flows")
 
 ##### Configure Contracts Link Tap Behavior
 The PSClickWrap contracts text loads into a UITextView, which gives you some flexibility for customizing link tap behavior. By default, UITextView will take users out of your app and into Safari. If you want to keep users in your own app, you can simply use a UITextViewDelegate to handle this behavior.
@@ -118,12 +118,12 @@ Before letting a user submit the form, you may want to make sure that the checkb
 ```swift
 // This is set up when you configure your clickwrap (e.g., after you call loadContracts).
 myClickWrap.checkbox.valueChanged = { (isChecked) in
-    // If checked, enable the submit button
-    if isChecked {
-        self.yourSubmitButton.isEnabled = true
-    } else {
-        self.yourSubmitButton.isEnabled = false
-    }
+	// If checked, enable the submit button
+	if isChecked {
+		self.yourSubmitButton.isEnabled = true
+	} else {
+		self.yourSubmitButton.isEnabled = false
+	}
 ```
 
 ### Sending Acceptance
@@ -157,7 +157,7 @@ You can optionally choose to utilize the PSAcceptanceViewController in order to 
 #### What it Looks Like
 We provide a fairly barebones implementation but can be easily customized to incorproate your brand styling. More on styling later in the documentation.
 
-![Example PSAcceptanceViewController](./Documentation/psacceptanceviewcontroller-screenshot.png "PSAcceptanceViewController")
+![Example PSAcceptanceViewController](./psacceptanceviewcontroller-screenshot.png "PSAcceptanceViewController")
 
 #### Setting It Up
 We make it easy to get acceptance information and set-up your PSAcceptanceViewController. Doing so only requires a few lines of code.
@@ -177,8 +177,8 @@ let groupKey: String = "my-pactsafe-group-key"
 ps.signedStatus(for: signerId, in: groupKey) { (needsAcceptance, contractIds) in
     if needsAcceptance {
         DispatchQueue.main.async {
-            /// Call the PSAcceptanceViewController with the group key, signer id, and
-            /// contract ids that need to be acceptanced.
+        	/// Call the PSAcceptanceViewController with the group key, signer id, and
+        	/// contract ids that need to be acceptanced.
             let psAcceptanceVc = PSAcceptanceViewController(groupKey, signerId, contractIds)
             
             // Since PSAcceptanceViewController conforms to UIViewController, you can configure your presentation.
@@ -187,7 +187,7 @@ ps.signedStatus(for: signerId, in: groupKey) { (needsAcceptance, contractIds) in
             self.present(psAcceptanceVc, animated: true, completion: nil)
         }
     } else {
-        // No acceptance is needed, so move them to where they should go.
+    	// No acceptance is needed, so move them to where they should go.
         DispatchQueue.main.async {
             self.segueToHome()
         }
@@ -203,10 +203,10 @@ You'll need to adopt the protocol to your ViewController and implement the optio
 
 ```swift
 extension MyViewController: PSAcceptanceViewControllerDelegate {
-    func receivedAcceptance() {
-        // Take your action here
-        loginUser()
-    }
+	func receivedAcceptance() {
+		// Take your action here
+		loginUser()
+	}
 }
 ```
 
@@ -247,7 +247,7 @@ ps.getSignedStatus(for: signerId, in: groupKey) { (needsAcceptance, contractIds)
 ```
 
 By getting these details and using a UIAlertController, you could show a simple alert like the following to the user:
-![Example UIAlert](./Documentation/loginwithalert.png "UIAlert")
+![Example UIAlert](./loginwithalert.png "UIAlert")
 
 ### Custom Implementation
 
