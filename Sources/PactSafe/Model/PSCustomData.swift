@@ -21,22 +21,28 @@ public struct PSCustomData: Codable {
     public var iosDeviceSystemName: String
     public var iosDeviceSystemVersion: String
     public var iosDeviceIdentifierForVendor: String
+    public var iosLocaleIdentifier: String
+    public var iosLocaleRegionCode: String
+    public var iosTimeZoneIdentifier: String
     
     public init() {
         self.iosDeviceName = UIDevice.current.name
         self.iosDeviceSystemName = UIDevice.current.systemName
         self.iosDeviceSystemVersion = UIDevice.current.systemVersion
         self.iosDeviceIdentifierForVendor = UIDevice.current.identifierForVendor?.uuidString ?? ""
+        self.iosLocaleIdentifier = Locale.current.identifier
+        self.iosLocaleRegionCode = Locale.current.regionCode ?? ""
+        self.iosTimeZoneIdentifier = TimeZone.current.identifier
     }
     
     func escapedCustomData() -> String? {
-        let jsonEncoder = JSONEncoder()
-        let jsonData = try? jsonEncoder.encode(self)
-        
-        guard let data = jsonData else { return nil }
-        
-        let stringifyData = String(data: data, encoding: .utf8)
-        
-        return stringifyData
+        let jsonData = try? JSONEncoder().encode(self)
+        if let data = jsonData {
+            let stringifyData = String(data: data, encoding: .utf8)
+            
+            return stringifyData
+        } else {
+            return nil
+        }
     }
 }

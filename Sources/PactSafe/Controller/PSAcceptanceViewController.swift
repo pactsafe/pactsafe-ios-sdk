@@ -105,7 +105,7 @@ public class PSAcceptanceViewController: UIViewController {
     func groupChangeSummary(completion: @escaping(_ changeSummary: String?) -> Void) {
         // Make sure contractIds exists.
         guard let contractIds = self.contractIds else { return }
-        self.ps.getContractsDetails(withContractIds: contractIds) { contracts, error in
+        self.ps.contractDetails(with: contractIds) { contracts, error in
             if error == nil {
                 var changeSummary: [String] = []
                 for contract in contracts {
