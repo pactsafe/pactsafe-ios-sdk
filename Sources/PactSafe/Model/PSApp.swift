@@ -31,8 +31,8 @@ public class PSApp {
     
     // MARK: - Activity API Methods
     
-    public func send(signerId: String,
-                     activityType: PSActivityEvent,
+    public func send(activity activityType: PSActivityEvent,
+                     signerId: String,
                      contractIds: [Int]?,
                      contractVersions: [String]?,
                      groupId: String?,
@@ -93,8 +93,7 @@ public class PSApp {
             if error == nil {
                 do {
                     if let data = data {
-                        let dicData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Bool]
-                        if let dicData = dicData {
+                        if let dicData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Bool] {
                             completion(dicData)
                         } else {
                             completion(nil)
@@ -112,7 +111,7 @@ public class PSApp {
         }
     }
     
-    public func getSignedStatus(for signerId: String,
+    public func signedStatus(for signerId: String,
                                 in groupKey: String,
                                 completion: @escaping(_ needsAcceptance: Bool, _ contractsIds: [Int]?) -> Void) {
         
@@ -132,11 +131,12 @@ public class PSApp {
         getData(fromURL: url) { (data, response, error) in
             var needsAcceptance: Bool = false
             var contractIdsNeedAcceptance: [Int] = []
-            if error == nil {
+            if error != nil {
+                if self.debugMode { debugPrint(error as Any) }
+            } else {
                 do {
                     if let data = data {
-                        let dicData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Bool]
-                        if let dicData = dicData {
+                        if let dicData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Bool] {
                             for (key, value) in dicData {
                                 if !value {
                                     needsAcceptance = true
@@ -151,11 +151,6 @@ public class PSApp {
                 } catch {
                     completion(needsAcceptance, nil)
                 }
-            } else {
-                if self.debugMode {
-                    debugPrint(error as Any)
-                }
-                completion(needsAcceptance, nil)
             }
         }
     }
@@ -163,7 +158,7 @@ public class PSApp {
     // MARK: - REST API Methods
     
     // Get Latest Contracts Using Group Key
-    public func getLatestContracts(byGroupKey groupKey: String,
+    public func latestContracts(byGroupKey groupKey: String,
                                    completion: @escaping (_ group: Group?, _ error: Error?) -> Void) {
         // Uses REST API
         // TODO: move to Activity API with /json
@@ -177,20 +172,19 @@ public class PSApp {
 
         guard let url = groupUrlConstruct.url else { return }
         getData(fromURL: url) { (data, response, error) in
-            if error == nil {
+            if error != nil {
+                if self.debugMode { debugPrint(error as Any) }
+            } else {
                 do {
-                    guard let jsonData = data else { return }
-                    let decoder = JSONDecoder()
-                    let decodedGroupData = try decoder.decode(Group.self, from: jsonData)
-                    completion(decodedGroupData, nil)
+                    if let jsonData = data {
+                        let decodedGroupData = try JSONDecoder().decode(Group.self, from: jsonData)
+                        completion(decodedGroupData, nil)
+                    } else {
+                        completion(nil, error)
+                    }
                 } catch {
                     completion(nil, error)
                 }
-            } else {
-                if self.debugMode {
-                    debugPrint(error as Any)
-                }
-                completion(nil, error)
             }
         }
     }
@@ -199,8 +193,8 @@ public class PSApp {
     
     // TODO: Ensure we have contract ids or throw error
 
-    public func getContractsDetails(withContractIds contractIds: [Int],
-                                    completion: @escaping (_ Data: [Contracts?], _ error: Error?) -> Void) {
+    public func contractDetails(with contractIds: [Int],
+                            s        completion: @escaping (_ Data: [Contracts?], _ error: Error?) -> Void) {
         
         // TODO: Add error messaging here
         guard let idsFormatted = dataHelpers.formatContractIds(contractIds) else { return }
@@ -219,25 +213,25 @@ public class PSApp {
         guard let url = urlConstruct.url else { return }
         
         getData(fromURL: url) { (data, response, error) in
-            if error == nil {
+            if error != nil {
+                if self.debugMode { debugPrint(error as Any) }
+                completion([], error)
+            } else {
                 do {
                     var returnContracts: [Contracts] = []
-                    guard let jsonData = data else { return }
-                    let decoder = JSONDecoder()
-                    let decodedContractsData = try decoder.decode(ContractsResponse.self, from: jsonData)
-                    let contractsData = decodedContractsData.data
-                    for contract in contractsData {
-                        returnContracts.append(contract)
+                    if let jsonData = data {
+                        let decodedContractsData = try JSONDecoder().decode(ContractsResponse.self, from: jsonData)
+                        let contractsData = decodedContractsData.data
+                        for contract in contractsData {
+                            returnContracts.append(contract)
+                        }
+                        completion(returnContracts, nil)
+                    } else {
+                        completion([], nil)
                     }
-                    completion(returnContracts, nil)
                 } catch {
                     completion([], error)
                 }
-            } else {
-                if self.debugMode {
-                    debugPrint(error as Any)
-                }
-                completion([], error)
             }
         }
     }

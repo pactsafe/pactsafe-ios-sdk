@@ -43,7 +43,7 @@ public class PSClickWrap: UIView {
     // TODO: change filterContractsById to contractIds with filter parameter
     public func loadContracts(withGroupKey groupKey: String, filterContractsById: [Int]? = []) {
         
-        ps.getLatestContracts(byGroupKey: groupKey) { contractsData, error in
+        ps.latestContracts(byGroupKey: groupKey) { contractsData, error in
             guard let contractsData = contractsData else { return }
             let legalCenterUrl = contractsData.data.site.legalCenterURL
             self.groupId = contractsData.data.id
@@ -94,7 +94,7 @@ public class PSClickWrap: UIView {
                            customData: PSCustomData?,
                            completionHandler: @escaping (_ data: Data?, _ response: URLResponse?, _ error: Error?) -> Void) {
         
-        ps.send(signerId: signerId, activityType: .agreed, contractIds: self.contractIds, contractVersions: self.contractVersions, groupId: "\(self.groupId)", emailConfirmation: false, customSignerData: customData) { (data, response, error) in
+        ps.send(activity: .agreed, signerId: signerId, contractIds: self.contractIds, contractVersions: self.contractVersions, groupId: "\(self.groupId)", emailConfirmation: false, customSignerData: customData) { (data, response, error) in
             completionHandler(data, response, error)
         }
         
