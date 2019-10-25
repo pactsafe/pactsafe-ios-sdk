@@ -8,9 +8,9 @@
 import Foundation
 import UIKit
 
-//@objc public protocol PSAcceptanceViewControllerDelegate: AnyObject {
-//    @objc optional func acceptanceStatus()
-//}
+@objc public protocol PSAcceptanceViewControllerDelegate: AnyObject {
+    @objc optional func receivedAcceptance()
+}
 
 @available(iOS 11, *)
 public class PSAcceptanceViewController: UIViewController {
@@ -20,25 +20,31 @@ public class PSAcceptanceViewController: UIViewController {
     public var changeSummary: String?
     public var contractIds: [Int]?
     public var checkboxSelected: Bool = false
-//    public weak var delegate: PSAcceptanceViewControllerDelegate?
+    public weak var delegate: PSAcceptanceViewControllerDelegate?
     
     private let groupKey: String?
-    private let signerId: String?
+    private let signerId: String
+    private let customData: PSCustomData?
     private let ps = PSApp.shared
     
     // Set up our views
     public var contractsView = UIView()
     public var checkboxAgreementView = UIView()
     public let submitButton = UIButton()
+    
     private let titleLabel = UILabel()
     private let changeSummaryTextView = UITextView()
     private let clickWrap = PSClickWrap()
     
     // TODO: It seems as if barely moving the modal causes the view to run viewWillAppear again, which means it could end up causing the API constantly. Need to investigate why this is called so quickly and what steps we'd need to take in order to prevent the API being called.
-    public init(_ groupKey: String?, _ signerId: String?, _ contractIds: [Int]?) {
+    public init(_ groupKey: String,
+                _ signerId: String,
+                _ contractIds: [Int]?,
+                _ customData: PSCustomData? = PSCustomData()) {
         self.groupKey = groupKey
         self.signerId = signerId
         self.contractIds = contractIds
+        self.customData = customData
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -121,7 +127,7 @@ public class PSAcceptanceViewController: UIViewController {
         clickWrap.translatesAutoresizingMaskIntoConstraints = false
         checkboxAgreementView.addSubview(clickWrap)
         guard let groupKey = groupKey else { return }
-        clickWrap.loadContracts(withGroupKey: groupKey)
+        clickWrap.loadContracts(withGroupKey: groupKey, filterContractsById: self.contractIds)
         clickWrap.checkbox.valueChanged = { (valueChanged) in
             self.configureSubmitButtonState(valueChanged)
             self.checkboxSelected = valueChanged
@@ -135,12 +141,30 @@ public class PSAcceptanceViewController: UIViewController {
         submitButton.tintColor = .black
         submitButton.setTitleColor(.black, for: .normal)
         submitButton.setTitleColor(.lightGray, for: .disabled)
+        submitButton.addTarget(self, action: #selector(self.submitPressed(sender:)), for: .touchUpInside)
         configureSubmitButtonState()
     }
     
     func configureSubmitButtonState(_ state: Bool = false) {
         // Disable submit button by default so we can ensure checkbox is selected
         submitButton.isEnabled = state
+    }
+    
+    @objc func submitPressed(sender: UIButton) {
+        if checkboxSelected {
+            clickWrap.sendAgreed(signerId: self.signerId, customData: customData) { (data, response, error) in
+                if error == nil {
+                    DispatchQueue.main.async {
+                        self.delegate?.receivedAcceptance?()
+                        self.dismiss(animated: true, completion: nil)
+                    }
+                } else {
+                    if self.ps.debugMode {
+                        debugPrint(error as Any)
+                    }
+                }
+            }
+        }
     }
     
     func setupConstraints() {

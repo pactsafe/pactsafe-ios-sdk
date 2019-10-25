@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 
+@available (iOS 10, *)
 public struct PSCustomData: Codable {
     
     /// First Name name of the signer, which is a reserved property.
