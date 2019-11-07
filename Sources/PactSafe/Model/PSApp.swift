@@ -21,7 +21,6 @@ public class PSApp {
     // TODO: Add some basic debug printing
     public var debugMode: Bool = false
 
-    // TODO: Decide if we go the shared instance route or not...
     public static let shared = PSApp()
     
     private let dataHelpers = PSDataHelpers()
@@ -64,50 +63,6 @@ public class PSApp {
                 debugPrint(error as Any)
             }
             completion(data, response, error)
-        }
-    }
-    
-    // Get Latest Signed
-    // TODO: Adjust to have multiple outputs to simplify work needed by developer? 
-    public func getLatestSigned(forSignerId signerId: String,
-                                inGroupKey groupKey: String?,
-                                _ contractIds: [Int]?,
-                                completion: @escaping ([String: Bool]?) -> Void) {
-        
-        // Uses Activity API
-        var urlConstruct = URLComponents()
-        urlConstruct.scheme = "https"
-        urlConstruct.host = PSHostName.activityAPI.rawValue
-        urlConstruct.path = "/latest"
-        urlConstruct.queryItems = [
-            URLQueryItem(name: "sig", value: dataHelpers.escapeString(signerId)),
-            URLQueryItem(name: "gkey", value: groupKey),
-            URLQueryItem(name: "cid", value: dataHelpers.formatContractIds(contractIds)),
-            URLQueryItem(name: "tm", value: self.testMode.description),
-            URLQueryItem(name: "sid", value: self.authentication.siteAccessId),
-        ]
-
-        guard let url = urlConstruct.url else { return }
-        
-        getData(fromURL: url) { (data, response, error) in
-            if error == nil {
-                do {
-                    if let data = data {
-                        if let dicData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Bool] {
-                            completion(dicData)
-                        } else {
-                            completion(nil)
-                        }
-                    }
-                } catch {
-                    completion(nil)
-                }
-            } else {
-                if self.debugMode{
-                    debugPrint(error as Any)
-                }
-                completion(nil)
-            }
         }
     }
     
