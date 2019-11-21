@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  PSAuthentication.swift
 //  
 //
 //  Created by Tim Morse  on 10/16/19.
@@ -12,6 +12,7 @@ public class PSAuthentication {
     
     public let accessToken: String
     public let siteAccessId: String
+    
     fileprivate let userAgent = Bundle.main.userAgent
     
     public init(accessToken: String, siteAccessId: String) {
@@ -19,6 +20,8 @@ public class PSAuthentication {
         self.siteAccessId = siteAccessId
     }
     
+    /// Adds the appropriate authentication to the URL request.
+    /// - Parameter url: The URL that's needed to generate an authenticated URL Request.
     open func authenticatedURLRequest(forURL url: URL) -> URLRequest? {
         
         var urlRequest = URLRequest(url: url);

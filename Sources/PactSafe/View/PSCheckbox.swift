@@ -1,5 +1,5 @@
 //
-//  Checkbox.swift
+//  PSCheckBox.swift
 //  
 //
 //  Created by Tim Morse  on 10/4/19.

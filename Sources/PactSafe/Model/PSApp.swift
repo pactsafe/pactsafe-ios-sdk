@@ -10,20 +10,28 @@ import Network
 
 @available(iOS 10.0, *)
 public class PSApp {
+    
     // MARK: - Properties
     
-    // Configure Authentication
+    /**
+            Used to configure your PSApp shared instance.
+
+     - Important:
+     This is required to be configured before using the PSApp shared instance.
+     */
     open var authentication: PSAuthentication!
     
-    // Configure Development Properties
+    /// When `testMode` is set to true, data sent to PactSafe can be deleted witin the PactSafe app dashboard.
     public var testMode: Bool = false
     
-    // TODO: Add some basic debug printing
+    /// When set to true, additional information on errors will be printed.
     public var debugMode: Bool = false
-
+    
+    /// Shared instance of PSApp class.
     public static let shared = PSApp()
     
-    private let dataHelpers = PSDataHelpers()
+    /// Allows for custom data formatting.
+    fileprivate let dataHelpers = PSDataHelpers()
 
     // MARK: -  Initializer
     private init() { }
@@ -40,11 +48,11 @@ public class PSApp {
                      completion: @escaping (_ data: Data?, _ response: URLResponse?, _ error: Error?) -> Void) {
         
         // Uses Activity API
-        var sendUrlContract = URLComponents()
-        sendUrlContract.scheme = "https"
-        sendUrlContract.host = PSHostName.activityAPI.rawValue
-        sendUrlContract.path = "/send"
-        sendUrlContract.queryItems = [
+        var urlComponents = URLComponents()
+        urlComponents.scheme = "https"
+        urlComponents.host = PSHostName.activityAPI.rawValue
+        urlComponents.path = "/send"
+        urlComponents.queryItems = [
             URLQueryItem(name: "sig", value: dataHelpers.escapeString(signerId)),
             URLQueryItem(name: "cid", value: dataHelpers.formatContractIds(contractIds)),
             URLQueryItem(name: "vid", value: dataHelpers.formatContractVersions(contractVersions)),
@@ -56,7 +64,7 @@ public class PSApp {
             URLQueryItem(name: "cus", value: customSignerData?.escapedCustomData()),
         ]
 
-        guard let url = sendUrlContract.url else { return }
+        guard let url = urlComponents.url else { return }
         
         sendData(with: url) { (data, response, error) in
             if self.debugMode && error != nil {
@@ -66,22 +74,29 @@ public class PSApp {
         }
     }
     
+    /// Receive acceptance status of a specific signer id within a group.
+    /// - Parameters:
+    ///   - signerId: A unique identifier that is used when needing to identify a user.
+    ///   - groupKey: The group key is used to access specific details within a defined group in PactSafe.
+    ///   - completion: The completion handler that gets called once an API request is complete.
+    ///   - needsAcceptance: Will return whether or not at least one contract within the group needs acceptance.
+    ///   - contractsIds: The `contractIds` will give you the unique contract ids that need to be accepted.
     public func signedStatus(for signerId: String,
-                                in groupKey: String,
-                                completion: @escaping(_ needsAcceptance: Bool, _ contractsIds: [Int]?) -> Void) {
+                             in groupKey: String,
+                             completion: @escaping(_ needsAcceptance: Bool, _ contractsIds: [Int]?) -> Void) {
         
-        var urlConstruct = URLComponents()
-        urlConstruct.scheme = "https"
-        urlConstruct.host = PSHostName.activityAPI.rawValue
-        urlConstruct.path = "/latest"
-        urlConstruct.queryItems = [
+        var urlComponents = URLComponents()
+        urlComponents.scheme = "https"
+        urlComponents.host = PSHostName.activityAPI.rawValue
+        urlComponents.path = "/latest"
+        urlComponents.queryItems = [
             URLQueryItem(name: "sig", value: dataHelpers.escapeString(signerId)),
             URLQueryItem(name: "gkey", value: groupKey),
             URLQueryItem(name: "tm", value: self.testMode.description),
             URLQueryItem(name: "sid", value: self.authentication.siteAccessId)
         ]
         
-        guard let url = urlConstruct.url else { return }
+        guard let url = urlComponents.url else { return }
         
         getData(fromURL: url) { (data, response, error) in
             var needsAcceptance: Bool = false
@@ -90,18 +105,16 @@ public class PSApp {
                 if self.debugMode { debugPrint(error as Any) }
             } else {
                 do {
-                    if let data = data {
-                        if let dicData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Bool] {
-                            for (key, value) in dicData {
-                                if !value {
-                                    needsAcceptance = true
-                                    if let idAsInt = Int(key) {
-                                       contractIdsNeedAcceptance.append(idAsInt)
-                                    }
+                    if let data = data, let dicData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Bool] {
+                        for (key, value) in dicData {
+                            if !value {
+                                needsAcceptance = true
+                                if let idAsInt = Int(key) {
+                                   contractIdsNeedAcceptance.append(idAsInt)
                                 }
                             }
-                            completion(needsAcceptance, contractIdsNeedAcceptance)
                         }
+                        completion(needsAcceptance, contractIdsNeedAcceptance)
                     }
                 } catch {
                     completion(needsAcceptance, nil)
@@ -117,15 +130,15 @@ public class PSApp {
                                    completion: @escaping (_ group: Group?, _ error: Error?) -> Void) {
         // Uses REST API
         // TODO: move to Activity API with /json
-        var groupUrlConstruct = URLComponents()
-        groupUrlConstruct.scheme = "https"
-        groupUrlConstruct.host = PSHostName.restAPI.rawValue
-        groupUrlConstruct.path = "/v1.1/groups/key::" + groupKey
-        groupUrlConstruct.queryItems = [
+        var urlComponents = URLComponents()
+        urlComponents.scheme = "https"
+        urlComponents.host = PSHostName.restAPI.rawValue
+        urlComponents.path = "/v1.1/groups/key::" + groupKey
+        urlComponents.queryItems = [
             URLQueryItem(name: "expand", value: "contracts,site"),
         ]
 
-        guard let url = groupUrlConstruct.url else { return }
+        guard let url = urlComponents.url else { return }
         getData(fromURL: url) { (data, response, error) in
             if error != nil {
                 if self.debugMode { debugPrint(error as Any) }
@@ -149,23 +162,23 @@ public class PSApp {
     // TODO: Ensure we have contract ids or throw error
 
     public func contractDetails(with contractIds: [Int],
-                            s        completion: @escaping (_ Data: [Contracts?], _ error: Error?) -> Void) {
+                                completion: @escaping (_ Data: [Contracts?], _ error: Error?) -> Void) {
         
         // TODO: Add error messaging here
         guard let idsFormatted = dataHelpers.formatContractIds(contractIds) else { return }
         let contractIdsFilter: String = "id==" + idsFormatted
 
         // Uses REST API
-        var urlConstruct = URLComponents()
-        urlConstruct.scheme = "https"
-        urlConstruct.host = PSHostName.restAPI.rawValue
-        urlConstruct.path = "/v1.1/contracts"
-        urlConstruct.queryItems = [
+        var urlComponents = URLComponents()
+        urlComponents.scheme = "https"
+        urlComponents.host = PSHostName.restAPI.rawValue
+        urlComponents.path = "/v1.1/contracts"
+        urlComponents.queryItems = [
             URLQueryItem(name: "filter", value: contractIdsFilter),
             URLQueryItem(name: "expand", value: "published_version"),
         ]
 
-        guard let url = urlConstruct.url else { return }
+        guard let url = urlComponents.url else { return }
         
         getData(fromURL: url) { (data, response, error) in
             if error != nil {

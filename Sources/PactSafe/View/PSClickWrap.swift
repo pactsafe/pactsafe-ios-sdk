@@ -16,6 +16,7 @@ public protocol PSClickWrapDelegate: AnyObject {
 public class PSClickWrap: UIView {
     
     // MARK: - Properties
+    
     public var checkbox: PSCheckbox
     public var textView: UITextView
     public var contractIds: [Int] = []
