@@ -10,13 +10,11 @@ import UIKit
 
 public class PSAuthentication {
     
-    public let accessToken: String
     public let siteAccessId: String
     
     fileprivate let userAgent = Bundle.main.userAgent
     
-    public init(accessToken: String, siteAccessId: String) {
-        self.accessToken = accessToken
+    public init(siteAccessId: String) {
         self.siteAccessId = siteAccessId
     }
     
@@ -27,7 +25,6 @@ public class PSAuthentication {
         var urlRequest = URLRequest(url: url);
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.setValue(userAgent, forHTTPHeaderField: "User-Agent")
-        urlRequest.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         
         return urlRequest
     }

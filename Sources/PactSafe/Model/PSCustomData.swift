@@ -11,9 +11,6 @@ import UIKit
 @available (iOS 10, *)
 public struct PSCustomData: Codable {
     
-    /// First Name name of the signer, which is a reserved property.
-    
-    
     /// First Name is a reserved property for custom data in PactSafe.
     public var first_name: String?
     

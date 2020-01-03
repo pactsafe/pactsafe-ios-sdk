@@ -47,13 +47,12 @@ public class PSApp {
                      customSignerData: PSCustomData?,
                      completion: @escaping (_ data: Data?, _ response: URLResponse?, _ error: Error?) -> Void) {
         
-        // Uses Activity API
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
         urlComponents.host = PSHostName.activityAPI.rawValue
         urlComponents.path = "/send"
         urlComponents.queryItems = [
-            URLQueryItem(name: "sig", value: dataHelpers.escapeString(signerId)),
+            URLQueryItem(name: "sig", value: signerId),
             URLQueryItem(name: "cid", value: dataHelpers.formatContractIds(contractIds)),
             URLQueryItem(name: "vid", value: dataHelpers.formatContractVersions(contractVersions)),
             URLQueryItem(name: "et", value: activityType.rawValue),
@@ -74,6 +73,12 @@ public class PSApp {
         }
     }
     
+    public func sendActivity(activiyType type: PSActivityEvent,
+                             signerId: String,
+                             completion: @escaping(_ data: Data?, _ response: URLResponse?, _ error: Error?) -> Void) {
+        
+    }
+    
     /// Receive acceptance status of a specific signer id within a group.
     /// - Parameters:
     ///   - signerId: A unique identifier that is used when needing to identify a user.
@@ -87,10 +92,10 @@ public class PSApp {
         
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
-        urlComponents.host = PSHostName.activityAPI.rawValue
+        urlComponents.host = PSHostName.qaActivityApi.rawValue
         urlComponents.path = "/latest"
         urlComponents.queryItems = [
-            URLQueryItem(name: "sig", value: dataHelpers.escapeString(signerId)),
+            URLQueryItem(name: "sig", value: signerId),
             URLQueryItem(name: "gkey", value: groupKey),
             URLQueryItem(name: "tm", value: self.testMode.description),
             URLQueryItem(name: "sid", value: self.authentication.siteAccessId)
@@ -101,11 +106,17 @@ public class PSApp {
         getData(fromURL: url) { (data, response, error) in
             var needsAcceptance: Bool = false
             var contractIdsNeedAcceptance: [Int] = []
+            
             if error != nil {
                 if self.debugMode { debugPrint(error as Any) }
             } else {
+                guard let data = data else {
+                    completion(needsAcceptance, nil)
+                    return
+                }
+                
                 do {
-                    if let data = data, let dicData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Bool] {
+                    if let dicData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Bool] {
                         for (key, value) in dicData {
                             if !value {
                                 needsAcceptance = true
@@ -122,83 +133,35 @@ public class PSApp {
             }
         }
     }
-
-    // MARK: - REST API Methods
     
-    // Get Latest Contracts Using Group Key
-    public func latestContracts(byGroupKey groupKey: String,
-                                   completion: @escaping (_ group: Group?, _ error: Error?) -> Void) {
-        // Uses REST API
-        // TODO: move to Activity API with /json
+    public func loadGroup(groupKey gKey: String,
+                          completion: @escaping(_ group: PSGroupData?, _ error: Error?) -> Void) {
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
-        urlComponents.host = PSHostName.restAPI.rawValue
-        urlComponents.path = "/v1.1/groups/key::" + groupKey
+        urlComponents.host = PSHostName.qaActivityApi.rawValue
+        urlComponents.path = "/load/json"
         urlComponents.queryItems = [
-            URLQueryItem(name: "expand", value: "contracts,site"),
+            URLQueryItem(name: "sid", value: authentication.siteAccessId),
+            URLQueryItem(name: "gkey", value: gKey)
         ]
-
+        
         guard let url = urlComponents.url else { return }
+        
         getData(fromURL: url) { (data, response, error) in
             if error != nil {
                 if self.debugMode { debugPrint(error as Any) }
+                completion(nil, error)
             } else {
+                guard let data = data else {
+                    completion(nil, nil)
+                    return
+                }
+                
                 do {
-                    if let jsonData = data {
-                        let decodedGroupData = try JSONDecoder().decode(Group.self, from: jsonData)
-                        completion(decodedGroupData, nil)
-                    } else {
-                        completion(nil, error)
-                    }
+                    let decodedGroupData = try JSONDecoder().decode(PSGroupData.self, from: data)
+                    completion(decodedGroupData, nil)
                 } catch {
                     completion(nil, error)
-                }
-            }
-        }
-    }
-
-    // MARK: Get Contract Details
-    
-    // TODO: Ensure we have contract ids or throw error
-
-    public func contractDetails(with contractIds: [Int],
-                                completion: @escaping (_ Data: [Contracts?], _ error: Error?) -> Void) {
-        
-        // TODO: Add error messaging here
-        guard let idsFormatted = dataHelpers.formatContractIds(contractIds) else { return }
-        let contractIdsFilter: String = "id==" + idsFormatted
-
-        // Uses REST API
-        var urlComponents = URLComponents()
-        urlComponents.scheme = "https"
-        urlComponents.host = PSHostName.restAPI.rawValue
-        urlComponents.path = "/v1.1/contracts"
-        urlComponents.queryItems = [
-            URLQueryItem(name: "filter", value: contractIdsFilter),
-            URLQueryItem(name: "expand", value: "published_version"),
-        ]
-
-        guard let url = urlComponents.url else { return }
-        
-        getData(fromURL: url) { (data, response, error) in
-            if error != nil {
-                if self.debugMode { debugPrint(error as Any) }
-                completion([], error)
-            } else {
-                do {
-                    var returnContracts: [Contracts] = []
-                    if let jsonData = data {
-                        let decodedContractsData = try JSONDecoder().decode(ContractsResponse.self, from: jsonData)
-                        let contractsData = decodedContractsData.data
-                        for contract in contractsData {
-                            returnContracts.append(contract)
-                        }
-                        completion(returnContracts, nil)
-                    } else {
-                        completion([], nil)
-                    }
-                } catch {
-                    completion([], error)
                 }
             }
         }
