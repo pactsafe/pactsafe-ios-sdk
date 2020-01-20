@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "PactSafe",
+    platforms: [.iOS(.v10)],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
@@ -24,5 +25,6 @@ let package = Package(
         .testTarget(
             name: "PactSafeTests",
             dependencies: ["PactSafe"]),
-    ]
+    ],
+    swiftLanguageVersions: [.v5]
 )

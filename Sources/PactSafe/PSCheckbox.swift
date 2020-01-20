@@ -48,7 +48,7 @@ public class PSCheckbox: UIControl {
     /// Shape of the center checkmark that appears when `Checkbox.isChecked == true`.
     ///
     /// **Default:** `CheckmarkStyle.square`
-    public var checkmarkStyle: CheckmarkStyle = .square
+    public var checkmarkStyle: CheckmarkStyle = .tick
 
     /// Shape of the outside border containing the checkmarks contents.
     ///

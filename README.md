@@ -18,7 +18,6 @@
 - Swift 5.0+
 - PactSafe Published Contracts in Public Group
 - PactSafe Group Key
-- PactSafe API Access Token
 - PactSafe Site Access ID
 
 ## Getting Started {#getting-started}
@@ -85,18 +84,22 @@ import PactSafe
 
 Using the SDK also requires authentication, which you’ll want to set up in your `application:didFinishLaunchingWithOptions` delegate.
 
-In order to authenticate, you'll want to use the class `PSAuthentication` with your credentials and assign it to the `authentication` property on `PSApp.shared`.
+In order to authenticate, you'll want to use the class `PSAuthentication` with your PactSafe Site Acces ID and assign it to the `authentication` property on `PSApp.shared`.
 
 ```swift
-PSApp.shared.authentication = PSAuthentication(accessToken: yourAccessToken,
-										    	siteAccessId: yourSiteAccessId)
+PSApp.shared.authentication = PSAuthentication(siteAccessId: yourSiteAccessId)
 ```
 
 ### Loading a Clickwrap {#loading-clickwrap}
-The easiest way of getting started with using the PactSafe clickwrap is by utilizing our PSClickWrap class to dynamically load your contracts into a UIView. The PSClickWrap class conforms to the UIView class, which allows you to easily customize the clickwrap as needed.
+The easiest way of getting started with using the PactSafe clickwrap is by utilizing our PSClickWrap class to dynamically load your contracts into a UIView. The PSClickWrap class conforms to the UIView class, which allows you to easily customize and format the clickwrap as needed.
+
+The PSClickWrap class offers your default UIView initializers, giving you flexibility with implementation You can either:
+
+- **Interface Builder** - add the custom class to a UIView within your storyboard that will load your PactSafe clickwrap.
+- **Programatically** - programatically gives you the most flexibility getting the PactSafe clickwrap into your project. 
 
 #### Interface Builder
-With an empty view in your storyboard, simply subclass the UIView with the PSClickWrap class. Once you subclass the UIView, you’ll need to do some configuring of the ClickWrap within your View Controller.
+With an empty view in your storyboard, simply subclass the UIView with the PSClickWrap class. Once you subclass the UIView, you’ll need to do some configuring of the ClickWrap within your view controller.
 
 Note: Don't forget to import PactSafe into your view controller.
 
@@ -104,7 +107,7 @@ Note: Don't forget to import PactSafe into your view controller.
 Make sure to create an IBOutlet to your PSClickWrap UIView in order to customize it.
 
 ##### Loads Contracts Into Your Clickwrap
-In order to get contracts to load into your clickwrap, you’ll need to use the loadContracts method, where you'll pass in your group key.
+In order to get contracts to load into your clickwrap, you’ll need to use the loadContracts method, where you'll pass in your PactSafe group key.
 
 ```swift
 override func viewWillAppear(_ animated: Bool) {
@@ -119,7 +122,7 @@ Once loaded, your clickwrap might look something like this:
 ![Example Loaded Clickwrap](./Documentation/images/clickwrap-loaded-example.png "User Flows")
 
 ##### Configure Contracts Link Tap Behavior
-The PSClickWrap contracts text loads into a UITextView, which gives you some flexibility for customizing link tap behavior. By default, UITextView will take users out of your app and into Safari. If you'd rather keep users in your app, you can use a UITextViewDelegate to adjust the default behavior.
+The PSClickWrap loads the text and links into a UITextView, which gives you some flexibility for customizing link tap behavior. By default, UITextView will take users out of your app and into Safari. If you'd rather keep users in your app, you can use a UITextViewDelegate to adjust the default behavior.
 
 ###### Import Safari Services
 Within the view controller where you configured your clickwrap, you’ll need to import SafariServices.
@@ -149,21 +152,22 @@ extension MyViewController: UITextViewDelegate {
 ```
 
 #### Check if Checkbox is Selected {#check-checkbox-selected}
-Before letting a user submit the form, you may want to make sure that the checkbox is selected. To do so, ou can monitor the value of the checkbox when you configure your clickwrap.
+Before letting a user submit the form, you may want to make sure that the checkbox is selected. To do so, you can monitor the value of the checkbox when you configure your clickwrap.
 
 ```swift
 // Can be used after you load your clickwrap (e.g., after you call loadContracts).
 myClickWrap.checkbox.valueChanged = { (isChecked) in
-    // If checked, enable the submit button
+    // If checked, enable (true) your UIButton submit button otherwise ensure it's disabled (false)
     if isChecked {
         self.yourSubmitButton.isEnabled = true
     } else {
         self.yourSubmitButton.isEnabled = false
     }
+}
 ```
 
 #### Sending Acceptance
-When using PSClickWrap, you can easily send an "agreed" event once they have accepted your contracts. To do this, you'll pass along the signer id and any custom data that you'd like to send to PactSafe.
+When using PSClickWrap, you can easily send an "agreed" event once they have accepted your contracts. To do this, you'll pass along a signer id and any custom data that you'd like to send to PactSafe.
 
 ```swift
 /// PSClickWrap has a method 'sendAgreed' that allows you to easily send acceptance using a signer id and any custom data.
@@ -180,25 +184,25 @@ myClickWrap.sendAgreed(signerId: signerId, customData: customData) { (data, resp
 We provide a few of ways checking acceptance and presenting if major version changes have been published. The following are three potential options.
 
 - Using a PSAcceptanceViewController
-- Using `signedStatus` Method and Present Alert
-- Using the `signedStatus` method
+- Using signedStatus Method and Present Alert
+- Using the signedStatus method
 
 ### Using a PSAcceptanceViewController {#psAcceptanceViewController}
 You can optionally choose to utilize the PSAcceptanceViewController in order to conveniently present to your users which contracts had major changes, what the changes were (if change summary is provided within PactSafe), and a PSClickWrap for users to easily accept the updated terms.
 
 #### What it Looks Like
-We provide a simple implementation that can be easily customized to incorproate your brand styling. More on styling later in the documentation.
+We provide a simple implementation that can be easily customized to incorporate your brand styling. More on styling later in the documentation.
 
 ![Example PSAcceptanceViewController](./Documentation/images/psacceptanceviewcontroller-example.png "PSAcceptanceViewController")
 
 #### Setting It Up
-We make it easy to get acceptance information and set-up your PSAcceptanceViewController. Doing so only requires a few lines of code.
+Getting things set up only takes a few lines of code.
 
 ```swift
 // Set up your PSApp.shared instance for use.
 let ps = PSApp.shared
 
-// Set your group key.
+// Set the PactSafe group key you plan to check.
 let groupKey: String = "my-pactsafe-group-key"
 
 /**
@@ -228,7 +232,7 @@ ps.signedStatus(for: signerId, in: groupKey) { (needsAcceptance, contractIds) in
 ```
 
 #### Receive Notice of Acceptance
-You'll probably want to know if the user checked the box and then clicked submit. You'll need to adopt the protocol to your ViewController and implement the `receivedAcceptance` method to know when they submit acceptance. Implementation may look like this.
+You'll probably want to know if the user checked the box and then clicked submit. You'll need to adopt a `PSAcceptanceViewControllerDelegate` protocol to your ViewController and implement the `receivedAcceptance` method to know acceptance was received. Implementation may look something like this:
 
 ```swift
 extension MyViewController: PSAcceptanceViewControllerDelegate {
@@ -239,38 +243,41 @@ extension MyViewController: PSAcceptanceViewControllerDelegate {
 }
 ```
 
-### Using `signedStatus` Method and Present Alert {#present-alert}
+### Using signedStatus Method and Present Alert {#present-alert}
 You may want a more simple approach of presenting that acceptance is needed or need greater customization. To get details around acceptance status, we provide two methods `signedStatus` and `getContractDetails` that help you get the appropriate information for displaying to a user.
 
 ```swift
 /// Get the status for a specific signer in a group.
 ps.signedStatus(for: signerId, in: groupKey) { (needsAcceptance, contractIds) in
-    if needsAcceptance {
-        guard let contractIds = contractIds else { return }
-        
-        self.ps.contractsDetails(with: contractIds) { (contracts, error) in
             
-            var updatedContractMessage = "We've updated the following: "
+            if needsAcceptance {
+                self.ps.loadGroup(groupKey: self.groupKey) { (groupData, error) in
+            guard let groupData = groupData else { return }
+            guard let contractsData = groupData.contractData else { return }
             
-            for contract in contracts {
-                guard let contract = contract else { return }
-                let contractTitle = contract.publishedVersion.title
-                updatedContractMessage.append(contractTitle + " ")
+            var updatedContractsMessage: String = "We've updated the following: "
+            
+            for (_, value) in contractsData {
+                let contractTitle = value.title ?? ""
+                updatedContractsMessage.append(contractTitle + " ")
             }
             
-            updatedContractMessage.append("\n \n Please agree to these changes.")
+            updatedContractsMessage.append("\n \n Please agree to these changes.")
             
             DispatchQueue.main.async {
-                let alert = self.updatedTermsAlert("Updated Terms", message: updatedContractMessage, email: emailAddressText, password: passwordText)
+                let alert = self.updatedTermsAlert("Updated Terms", message: updatedContractsMessage, email: signerId, password: passwordText)
                 self.present(alert, animated: true, completion: nil)
             }
         }
-    } else {
-        DispatchQueue.main.async {
-            self.segueToHome()
+            
         }
-    }
-}
+                
+            } else {
+                DispatchQueue.main.async {
+                    self.segueToHome()
+                }
+            }
+        }
 ```
 
 By getting these details and using a UIAlertController, you could show an alert.
@@ -278,6 +285,12 @@ By getting these details and using a UIAlertController, you could show an alert.
 
 
 ![Example UIAlert](./Documentation/images/login-with-alert.png "UIAlert")
+
+
+
+## Using the signedStatus Method
+
+
 
 
 

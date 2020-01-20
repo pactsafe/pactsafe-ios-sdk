@@ -7,12 +7,18 @@
 
 import Foundation
 
+/**
+        The PactSafe API Hostname.
+ 
+ - Important:
+     The SDK currently only supports the Activity API. Have feedback on what else you'd like to see? Please let us know by contacting us.
+ */
 public enum PSHostName: String {
     case activityAPI = "pactsafe.io"
-    case restAPI = "api.pactsafe.com"
-    case qaActivityApi = "qa.pactsafe.io"
+    // case restAPI = "api.pactsafe.com"
 }
 
+/// The available activity events to send to the PactSafe API.
 public enum PSActivityEvent: String {
     case agreed = "agreed"
     case displayed = "displayed"
@@ -22,17 +28,15 @@ public enum PSActivityEvent: String {
     case disagreed = "disagreed"
 }
 
-/// Alerts the style of the clickwrap that is loaded.
+/// Used to confgiure the clickwrap style.
 public enum PSClickWrapStyle: String {
-    case checkbox = "checkbox"
-    case combined = "combined"
-    case full = "full"
+    case combined
+    case noCheckbox
 }
 
+/// The error messages used throughout the PactSafe SDK.
 public enum PSErrorMessages: String {
     case constructUrlError = "Error constructing URL."
     case sendActivitySendError = "Error sending data."
-    case contructingURLError = "Issue Constructing URL"
     case missingSiteAccesId = "Missing Site Access ID"
-    case missingAccessToken = "Missing Access Token"
 }

@@ -7,21 +7,21 @@
 
 import Foundation
 
-public struct PSDataHelpers {
+struct PSDataHelpers {
     
-    public func escapeString(_ input: String) -> String {
+    func escapeString(_ input: String) -> String {
         let originalString = input
         let escapedString = originalString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? ""
         return escapedString
     }
     
-    public func formatContractIds(_ contractIds: [Int]?) -> String? {
+    func formatContractIds(_ contractIds: [String]?) -> String? {
         guard let contractIds = contractIds else { return nil }
         let formattedIds = contractIds.map { String($0) }.joined(separator: ",")
         return formattedIds
     }
     
-    public func formatContractVersions(_ contractVersions: [String]?) -> String? {
+    func formatContractVersions(_ contractVersions: [String]?) -> String? {
         guard let contractVersions = contractVersions else { return nil }
         let formattedVersions = contractVersions.map { String($0) }.joined(separator: ",")
         return formattedVersions

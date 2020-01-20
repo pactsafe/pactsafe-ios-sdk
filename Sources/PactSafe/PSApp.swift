@@ -9,6 +9,8 @@ import Foundation
 import Network
 
 @available(iOS 10.0, *)
+
+/// The entry point of the PSApp SDK, which is accessible via the `shared` instance.
 public class PSApp {
     
     // MARK: - Properties
@@ -24,27 +26,29 @@ public class PSApp {
     /// When `testMode` is set to true, data sent to PactSafe can be deleted witin the PactSafe app dashboard.
     public var testMode: Bool = false
     
-    /// When set to true, additional information on errors will be printed.
+    /// When set to true, additional errors will be printed from the device.
     public var debugMode: Bool = false
     
-    /// Shared instance of PSApp class.
-    public static let shared = PSApp()
+    /// The shared instance of PSApp class.
+    public static let shared: PSApp = {
+        let instance = PSApp()
+        return instance
+    }()
     
     /// Allows for custom data formatting.
     fileprivate let dataHelpers = PSDataHelpers()
 
     // MARK: -  Initializer
-    private init() { }
+    private init( ) {}
     
     // MARK: - Activity API Methods
     
     public func send(activity activityType: PSActivityEvent,
-                     signerId: String,
-                     contractIds: [Int]?,
+                     signer: PSSigner,
+                     contractIds: [String]?,
                      contractVersions: [String]?,
                      groupId: String?,
                      emailConfirmation: Bool? = false,
-                     customSignerData: PSCustomData?,
                      completion: @escaping (_ data: Data?, _ response: URLResponse?, _ error: Error?) -> Void) {
         
         var urlComponents = URLComponents()
@@ -52,7 +56,7 @@ public class PSApp {
         urlComponents.host = PSHostName.activityAPI.rawValue
         urlComponents.path = "/send"
         urlComponents.queryItems = [
-            URLQueryItem(name: "sig", value: signerId),
+            URLQueryItem(name: "sig", value: signer.signerId),
             URLQueryItem(name: "cid", value: dataHelpers.formatContractIds(contractIds)),
             URLQueryItem(name: "vid", value: dataHelpers.formatContractVersions(contractVersions)),
             URLQueryItem(name: "et", value: activityType.rawValue),
@@ -60,7 +64,7 @@ public class PSApp {
             URLQueryItem(name: "cnf", value: emailConfirmation?.description ?? "false"),
             URLQueryItem(name: "tm", value: self.testMode.description),
             URLQueryItem(name: "sid", value: self.authentication.siteAccessId),
-            URLQueryItem(name: "cus", value: customSignerData?.escapedCustomData()),
+            URLQueryItem(name: "cus", value: signer.customData.escapedCustomData()),
         ]
 
         guard let url = urlComponents.url else { return }
@@ -73,9 +77,40 @@ public class PSApp {
         }
     }
     
-    public func sendActivity(activiyType type: PSActivityEvent,
-                             signerId: String,
-                             completion: @escaping(_ data: Data?, _ response: URLResponse?, _ error: Error?) -> Void) {
+    public func sendActivity(_ type: PSActivityEvent,
+                             signer: PSSigner,
+                             group: PSGroupData,
+                             parameters: PSConnectionData = PSConnectionData(),
+                             testMode: Bool = false,
+                             completion: @escaping(_ response: URLResponse?, _ error: Error?) -> Void) {
+        var urlComponents = URLComponents()
+        urlComponents.scheme = "https"
+        urlComponents.host = PSHostName.activityAPI.rawValue
+        urlComponents.path = "/send"
+        
+        let activityParameters = [
+            URLQueryItem(name: "et", value: type.rawValue),
+            URLQueryItem(name: "sig", value: signer.signerId),
+            URLQueryItem(name: "cus", value: signer.customData.escapedCustomData()),
+            URLQueryItem(name: "cid", value: group.contractsIds),
+            URLQueryItem(name: "vid", value: group.contractVersions),
+            URLQueryItem(name: "gid", value: "\(group.id)"),
+            URLQueryItem(name: "cnf", value: group.confirmationEmail?.description ?? "false"),
+            URLQueryItem(name: "tm", value: self.testMode.description),
+            URLQueryItem(name: "sid", value: self.authentication.siteAccessId)
+        ]
+        
+        let connectionData = parameters.urlQueryItems()
+        urlComponents.queryItems = activityParameters + connectionData
+        
+        guard let url = urlComponents.url else { return }
+        
+        sendData(with: url) { (data, response, error) in
+            if self.debugMode && error != nil {
+                debugPrint(error as Any)
+            }
+            completion(response, error)
+        }
         
     }
     
@@ -85,14 +120,14 @@ public class PSApp {
     ///   - groupKey: The group key is used to access specific details within a defined group in PactSafe.
     ///   - completion: The completion handler that gets called once an API request is complete.
     ///   - needsAcceptance: Will return whether or not at least one contract within the group needs acceptance.
-    ///   - contractsIds: The `contractIds` will give you the unique contract ids that need to be accepted.
-    public func signedStatus(for signerId: String,
-                             in groupKey: String,
-                             completion: @escaping(_ needsAcceptance: Bool, _ contractsIds: [Int]?) -> Void) {
+    ///   - contractsIds: The `contractIds` will give you the contract IDs that need to be accepted.
+    public func signedStatus(for signerId: PSSignerID,
+                             groupKey: String,
+                             completion: @escaping(_ needsAcceptance: Bool, _ contractsIds: [String]?) -> Void) {
         
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
-        urlComponents.host = PSHostName.qaActivityApi.rawValue
+        urlComponents.host = PSHostName.activityAPI.rawValue
         urlComponents.path = "/latest"
         urlComponents.queryItems = [
             URLQueryItem(name: "sig", value: signerId),
@@ -105,7 +140,7 @@ public class PSApp {
         
         getData(fromURL: url) { (data, response, error) in
             var needsAcceptance: Bool = false
-            var contractIdsNeedAcceptance: [Int] = []
+            var contractIdsNeedAcceptance: [String] = []
             
             if error != nil {
                 if self.debugMode { debugPrint(error as Any) }
@@ -117,12 +152,10 @@ public class PSApp {
                 
                 do {
                     if let dicData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Bool] {
-                        for (key, value) in dicData {
-                            if !value {
+                        for (contractIdKey, accepted) in dicData {
+                            if !accepted {
                                 needsAcceptance = true
-                                if let idAsInt = Int(key) {
-                                   contractIdsNeedAcceptance.append(idAsInt)
-                                }
+                                contractIdsNeedAcceptance.append(contractIdKey)
                             }
                         }
                         completion(needsAcceptance, contractIdsNeedAcceptance)
@@ -138,7 +171,7 @@ public class PSApp {
                           completion: @escaping(_ group: PSGroupData?, _ error: Error?) -> Void) {
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
-        urlComponents.host = PSHostName.qaActivityApi.rawValue
+        urlComponents.host = PSHostName.activityAPI.rawValue
         urlComponents.path = "/load/json"
         urlComponents.queryItems = [
             URLQueryItem(name: "sid", value: authentication.siteAccessId),
@@ -180,16 +213,16 @@ public class PSApp {
         // Get data for urlRequest and return data or errors to completion handler
         let task = URLSession.shared.dataTask(with: urlRequest) { data, response, error in
             if let error = error {
-                completion(nil, nil, error)
+                completion(data, response, error)
                 return
             }
             guard let httpResponse = response as? HTTPURLResponse,
                 (200 ... 299).contains(httpResponse.statusCode) else {
-                    completion(nil, response, nil)
+                    completion(data, response, error)
                     return
             }
             if let data = data {
-                completion(data, nil, nil)
+                completion(data, response, error)
             }
         }
         task.resume()
@@ -204,16 +237,16 @@ public class PSApp {
         // Send data for URLRequest and return data or errors to completion handler
         let task = URLSession.shared.dataTask(with: urlRequest) { data, response, error in
             if let error = error {
-                completion(nil, nil, error)
+                completion(data, response, error)
                 return
             }
             guard let httpResponse = response as? HTTPURLResponse,
                 (200 ... 299).contains(httpResponse.statusCode) else {
-                completion(nil, response, nil)
+                completion(data, response, error)
                 return
             }
             if let data = data {
-                completion(data, nil, nil)
+                completion(data, response, error)
             }
         }
         task.resume()
@@ -222,7 +255,8 @@ public class PSApp {
     // MARK: Authentication Check
     internal func assertSetup() {
         guard authentication != nil else {
-            fatalError("ERROR: This request requires authentication using your PactSafe Access ID.")
+            assertionFailure("ERROR: This request requires authentication using your PactSafe Access ID.")
+            return
         }
     }
 }
