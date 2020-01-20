@@ -9,30 +9,42 @@ import Foundation
 
 // MARK: - GroupData
 public struct PSGroupData: Codable {
-    public let key: String?
-    public let type: String?
+    
+    private let type, containerSelector, signerIDSelector, formSelector, renderID: String?
+    private let forceScroll, autoRun: Bool?
+    
+    public let key: String
+    public let id: Int
+    public let contracts: [Int]
+    public let versions: [String]
+    public let majorVersions: [String]
+    
     public let style: String?
-    public let group: Int
-    public let containerSelector, signerIDSelector, formSelector: String?
-    public let blockFormSubmission, forceScroll: Bool?
+    public let blockFormSubmission: Bool?
     public let alertMessage: String?
-    public let confirmationEmail, triggered: Bool?
+    public let confirmationEmail: Bool?
+    public let triggered: Bool?
     public let legalCenterURL: String?
     public let acceptanceLanguage: String?
     public let contractData: [String: Contract]?
-    public let contracts: [Int]?
-    public let versions, majorVersions: [String]?
-    public let renderID: String?
     public let renderedTime: Int?
-    public let autoRun, displayAll: Bool?
+    public let displayAll: Bool?
     public let contractHTML: String?
     public let locale: String?
+    
+    public var contractsIds: String {
+        return contracts.map( { String($0) } ).joined(separator: ",")
+    }
+    
+    public var contractVersions: String? {
+        return versions.joined(separator: ",")
+    }
 
     enum CodingKeys: String, CodingKey {
         case key
         case type
         case style
-        case group
+        case id = "group"
         case containerSelector = "container_selector"
         case signerIDSelector = "signer_id_selector"
         case formSelector = "form_selector"
@@ -53,9 +65,14 @@ public struct PSGroupData: Codable {
         case contractHTML = "contract_html"
         case locale
     }
+    
+    public func cleanAcceptanceLanguage(of parameter: String) -> String? {
+        guard let acceptanceLanguage = acceptanceLanguage else { return nil }
+        return acceptanceLanguage.replacingOccurrences(of: parameter, with: "")
+    }
 }
 
-// TODO: RENAME TO CONTRACT
+
 public struct Contract: Codable {
     public let publishedVersion, title, key, changeSummary: String?
 
