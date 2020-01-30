@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 
+/// The authentication used to interact witht the PactSafe API.
 public class PSAuthentication {
     
     /// The PactSafe Site Access ID that is required for making requests with the PactSafe Activity API.

@@ -8,7 +8,7 @@
 import UIKit
 
 public protocol PSClickWrapViewDelegate: AnyObject {
-    func clickWrapRendered(withGroup groupData: PSGroupData)
+    func clickWrapRendered(withGroup groupData: PSGroup)
 }
 
 @available(iOS 10.0, *)
@@ -41,7 +41,7 @@ public class PSClickWrapView: UIView {
     public var overrideAcceptanceLanguage: NSMutableAttributedString?
     
     
-    public var groupData: PSGroupData?
+    public var groupData: PSGroup?
     
     /// The shared instance of PSApp class.
     private let ps = PSApp.shared
@@ -105,8 +105,8 @@ public class PSClickWrapView: UIView {
                 let contractsCount = contractsData.count
                 for (_, contractData) in contractsData {
                     index += 1
-                    let title = contractData.title ?? ""
-                    let legalCenterUrl = (groupData.legalCenterURL ?? "") + "#" + (contractData.key ?? "")
+                    let title = contractData.title
+                    let legalCenterUrl = (groupData.legalCenterURL) + "#" + (contractData.key)
                     
                     let attributedString = NSMutableAttributedString(string: title)
                     attributedString.addAttribute(.foregroundColor, value: UIColor.white, range: NSRange(location: 0, length: attributedString.length))
@@ -145,16 +145,18 @@ public class PSClickWrapView: UIView {
     }
     
     public func sendAgreed(signer: PSSigner,
-                           completion: @escaping (_ response: URLResponse?, _ error: Error?) -> Void) {
+                           completion: @escaping (_ error: Error?) -> Void) {
         
         // TODO: Handle no group data
         guard let groupData = self.groupData else { return }
-        ps.sendActivity(.agreed, signer: signer, group: groupData) { (response, error) in
-            completion(response, error)
+        ps.sendActivity(.agreed, signer: signer, group: groupData) { (error) in
+            completion(error)
         }
     }
     
-    private func clean(_ acceptanceLanguage: String, remove dynamicParameter: String) -> NSMutableAttributedString {
+    
+    private func clean(_ acceptanceLanguage: String,
+                       remove dynamicParameter: String) -> NSMutableAttributedString {
         let removeString = acceptanceLanguage.replacingOccurrences(of: dynamicParameter, with: "")
         let acceptanceLanguageToReturn = NSMutableAttributedString(string: removeString)
         DispatchQueue.main.async {

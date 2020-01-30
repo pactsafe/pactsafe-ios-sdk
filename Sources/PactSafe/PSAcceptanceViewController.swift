@@ -148,7 +148,7 @@ public class PSAcceptanceViewController: UIViewController {
         configureSubmitButtonState()
     }
     
-    private func addChangeSummaryText(groupData: PSGroupData) {
+    private func addChangeSummaryText(groupData: PSGroup) {
         let changeSummaryFormatted = changeSummary(groupData: groupData)
         self.changeSummary = changeSummaryFormatted
         self.changeSummaryTextView.text = changeSummaryFormatted
@@ -156,7 +156,7 @@ public class PSAcceptanceViewController: UIViewController {
     
     /// Creates a user-friendly view of the contracts that have changed and includes the
     /// the change summary if availlable.
-    private func changeSummary(groupData: PSGroupData?) -> String {
+    private func changeSummary(groupData: PSGroup?) -> String {
         guard let groupData = groupData else { return "" }
         
         guard let contractsData = groupData.contractData else { return "" }
@@ -171,7 +171,7 @@ public class PSAcceptanceViewController: UIViewController {
                 index += 1
                 if let contractIds = contractIds {
                     if contractIds.contains(contractIdKey) {
-                        let contractTitle = contractData.title ?? ""
+                        let contractTitle = contractData.title
                         changeSummaryString.append(contractTitle)
                         if index != contractsData.count && contractsData.count == 2 { changeSummaryString.append(" and ") }
                         if index == contractsData.count { changeSummaryString.append(".") }
@@ -193,16 +193,14 @@ public class PSAcceptanceViewController: UIViewController {
         if checkboxSelected {
             // TODO: Make this easier
             let signer = PSSigner(signerId: self.signerId)
-            psClickWrap.sendAgreed(signer: signer) { (response, error) in
+            psClickWrap.sendAgreed(signer: signer) { (error) in
                 if error == nil {
                     DispatchQueue.main.async {
                         self.delegate?.receivedAcceptance?()
                         self.dismiss(animated: true, completion: nil)
                     }
                 } else {
-                    if self.ps.debugMode {
-                        debugPrint(error as Any)
-                    }
+                    // TODO: Handle errors here
                 }
             }
         }
@@ -247,7 +245,7 @@ public class PSAcceptanceViewController: UIViewController {
 
 @available(iOS 11.0, *)
 extension PSAcceptanceViewController: PSClickWrapViewDelegate {
-    public func clickWrapRendered(withGroup groupData: PSGroupData) {
+    public func clickWrapRendered(withGroup groupData: PSGroup) {
         DispatchQueue.main.async {
             self.addChangeSummaryText(groupData: groupData)
         }

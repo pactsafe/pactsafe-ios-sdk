@@ -7,6 +7,7 @@
 
 import UIKit
 
+/// The connection data that is sent to PactSafe as part of an activity.
 public struct PSConnectionData: Codable {
     
     /// The client library being used that is sent to PactSafe.
@@ -24,7 +25,7 @@ public struct PSConnectionData: Codable {
     /// The operating system and version of the  device.
     private let operatingSystem: String
     
-    /// The screen resolution of the  device.
+    /// The screen resolution of the device.
     private let screenResolution: String
     
     /// The current locale identifier of the device.
@@ -65,18 +66,14 @@ public struct PSConnectionData: Codable {
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
         if #available(iOS 11.0, *) { encoder.outputFormatting = .sortedKeys }
-        let jsonData = try? encoder.encode(self)
-        if let data = jsonData {
-            guard let serialization = try? JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String: String] else { return [] }
-            var queryItems: [URLQueryItem] = []
-            for (key, value) in serialization {
-                let item = URLQueryItem(name: key, value: value)
-                queryItems.append(item)
-            }
-            return queryItems
-        } else {
-            return []
+        guard let jsonData = try? encoder.encode(self) else { return []}
+        guard let serialization = try? JSONSerialization.jsonObject(with: jsonData, options: .mutableContainers) as? [String: String] else { return [] }
+        var queryItems: [URLQueryItem] = []
+        for (key, value) in serialization {
+            let item = URLQueryItem(name: key, value: value)
+            queryItems.append(item)
         }
+        return queryItems
     }
     
 }

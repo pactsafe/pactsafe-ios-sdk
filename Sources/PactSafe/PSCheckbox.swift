@@ -12,10 +12,8 @@ protocol PSCheckboxDelegate {
     func checkboxChanged(_ isChecked: Bool)
 }
 
-// From the following GitHub repo: https://github.com/BeauNouvelle/SimpleCheckbox
-
 /// Checkbox is a simple, animation free checkbox and UISwitch alternative designed
-/// to be performant and easy to implement.
+/// to be performant and easy to implement. Originally created  (here)[https://github.com/BeauNouvelle/SimpleCheckbox]
 @available(iOS 10.0, *)
 public class PSCheckbox: UIControl {
 

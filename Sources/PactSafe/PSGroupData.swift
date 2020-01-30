@@ -8,34 +8,74 @@
 import Foundation
 
 // MARK: - GroupData
-public struct PSGroupData: Codable {
+public struct PSGroup: Codable {
     
-    private let type, containerSelector, signerIDSelector, formSelector, renderID: String?
+    // MARK: - Private or unused properties
+    private let type, containerSelector, signerIDSelector, formSelector: String?
+    private let renderID: String?
     private let forceScroll, autoRun: Bool?
     
+    // Unusued and is currently always false.
+    private let triggered: Bool?
+    
+    /// Note: Unused for the iOS SDK.
+    /// The setting of whether all contracts should be displayed immediately.
+    /// A contract will only be displayed if the signer hasn't accepted the latest version.
+    private let displayAll: Bool?
+    
+    
+    // MARK: - Public properties
+    /// The group key.
     public let key: String
+    
+    /// The ID of the group.
     public let id: Int
+    
+    /// The contract IDs that are part of the group.
     public let contracts: [Int]
+    
+    /// The contract version IDs that are part of the group.
     public let versions: [String]
+    
+    /// The major version ID of the contract
     public let majorVersions: [String]
     
+    /// The clickwrap style of the group.
     public let style: String?
-    public let blockFormSubmission: Bool?
-    public let alertMessage: String?
-    public let confirmationEmail: Bool?
-    public let triggered: Bool?
-    public let legalCenterURL: String?
+    
+    /// The current setting for whether the form submission should be blocked.
+    public let blockFormSubmission: Bool
+    
+    /// The alert message to be displayed when acceptance is required.
+    public let alertMessage: String
+    
+    /// The URL of the legal center for the PactSafe site.
+    public let legalCenterURL: String
+    
+    /// The acceptance language that is set within the group's settings.
     public let acceptanceLanguage: String?
+    
+    /// The contracts data where the contract ID is the key.
     public let contractData: [String: Contract]?
-    public let renderedTime: Int?
-    public let displayAll: Bool?
+    
+    /// The time (in epoch) of when the group was fetched.
+    public let renderedTime: Int
+    
+    /// The rendered HTML of the clickwrap.
     public let contractHTML: String?
+    
+    /// The locale of the group.
     public let locale: String?
     
+    /// The current setting within the group for whether a confirmation should be sent upon acceptance.
+    public let confirmationEmail: Bool
+    
+    /// The contract IDs separated by a`,` and returned as a string.
     public var contractsIds: String {
         return contracts.map( { String($0) } ).joined(separator: ",")
     }
     
+    /// The contract versions separated by a `,` and returned as a string.
     public var contractVersions: String? {
         return versions.joined(separator: ",")
     }
@@ -66,19 +106,12 @@ public struct PSGroupData: Codable {
         case locale
     }
     
+    
+    /// Returns the acceptance language without the specified parameter.
+    /// This can be useful when wanting to remove handlebars set within the group setting.
+    /// - Parameter parameter: The string you want to remove from the acceptance language.
     public func cleanAcceptanceLanguage(of parameter: String) -> String? {
         guard let acceptanceLanguage = acceptanceLanguage else { return nil }
         return acceptanceLanguage.replacingOccurrences(of: parameter, with: "")
-    }
-}
-
-
-public struct Contract: Codable {
-    public let publishedVersion, title, key, changeSummary: String?
-
-    enum CodingKeys: String, CodingKey {
-        case publishedVersion = "published_version"
-        case title, key
-        case changeSummary = "change_summary"
     }
 }

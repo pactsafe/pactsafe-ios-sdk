@@ -6,10 +6,10 @@
 	* [Notes for Getting Started](#notes-getting-started)
 3. [Usage](#usage)
 	* [Set Up Authentication and Initialize](#authentication-and-initialization)
-  * [Loading a Clickwrap](#loading-clickwrap)
-  * [Checking Acceptance](#checking-acceptance)
-  * [Send Activity Manually](#send-activity-manually)
-  * [Customizing Acceptance Data](#customizing-acceptance-data)
+	* [Loading a Clickwrap](#loading-clickwrap)
+	* [Checking Acceptance](#checking-acceptance)
+	* [Send Activity Manually](#send-activity-manually)
+	* [Customizing Acceptance Data](#customizing-acceptance-data)
 
 ## Requirements {#requirements}
 
@@ -84,7 +84,7 @@ import PactSafe
 
 Using the SDK also requires authentication, which you’ll want to set up in your `application:didFinishLaunchingWithOptions` delegate.
 
-In order to authenticate, you'll want to use the class `PSAuthentication` with your PactSafe Site Acces ID and assign it to the `authentication` property on `PSApp.shared`.
+In order to authenticate, you'll want to use the `PSAuthentication` class with your PactSafe Site Acces ID and assign it to the `authentication` property on `PSApp.shared`.
 
 ```swift
 PSApp.shared.authentication = PSAuthentication(siteAccessId: yourSiteAccessId)
@@ -93,10 +93,10 @@ PSApp.shared.authentication = PSAuthentication(siteAccessId: yourSiteAccessId)
 ### Loading a Clickwrap {#loading-clickwrap}
 The easiest way of getting started with using the PactSafe clickwrap is by utilizing our PSClickWrap class to dynamically load your contracts into a UIView. The PSClickWrap class conforms to the UIView class, which allows you to easily customize and format the clickwrap as needed.
 
-The PSClickWrap class offers your default UIView initializers, giving you flexibility with implementation You can either:
+The PSClickWrap class utilizes the default UIView initializers, giving you flexibility with implementation. You can implement in the following ways:
 
 - **Interface Builder** - add the custom class to a UIView within your storyboard that will load your PactSafe clickwrap.
-- **Programatically** - programatically gives you the most flexibility getting the PactSafe clickwrap into your project. 
+- **Programatically** - programatically gives you the most flexibility imlementing the PactSafe clickwrap into your project. 
 
 #### Interface Builder
 With an empty view in your storyboard, simply subclass the UIView with the PSClickWrap class. Once you subclass the UIView, you’ll need to do some configuring of the ClickWrap within your view controller.
@@ -132,7 +132,7 @@ import SafariServices
 ```
 
 ###### Configure Delegate
-The PSClickWrap contains a property `textView` that exposes the UITextView that contains your acceptance language.
+The PSClickWrap contains a property `textView` that exposes the UITextView that holds your acceptance language and links to your terms.
 
 ```swift
 myClickWrap.textView.delegate
@@ -157,7 +157,7 @@ Before letting a user submit the form, you may want to make sure that the checkb
 ```swift
 // Can be used after you load your clickwrap (e.g., after you call loadContracts).
 myClickWrap.checkbox.valueChanged = { (isChecked) in
-    // If checked, enable (true) your UIButton submit button otherwise ensure it's disabled (false)
+    // If checked, enable (true) your UIButton submit button otherwise ensure it's disabled (false). You may want to also adjust the style of your button here as well.
     if isChecked {
         self.yourSubmitButton.isEnabled = true
     } else {
@@ -167,11 +167,12 @@ myClickWrap.checkbox.valueChanged = { (isChecked) in
 ```
 
 #### Sending Acceptance
-When using PSClickWrap, you can easily send an "agreed" event once they have accepted your contracts. To do this, you'll pass along a signer id and any custom data that you'd like to send to PactSafe.
+When using PSClickWrap, you can easily send an "agreed" event once they have accepted your contracts. To do this, you'll pass along a signer to the method.
 
 ```swift
 /// PSClickWrap has a method 'sendAgreed' that allows you to easily send acceptance using a signer id and any custom data.
-myClickWrap.sendAgreed(signerId: signerId, customData: customData) { (data, response, error) in
+let signer = PSSigner(signerId: signerId, customData: customData)
+myClickWrap.sendAgreed(signer: signer) { (response, error) in
     if error == nil {
         self.performSegue(withIdentifier: "signUpToHomeSegue", sender: self)
     } else {
@@ -188,7 +189,7 @@ We provide a few of ways checking acceptance and presenting if major version cha
 - Using the signedStatus method
 
 ### Using a PSAcceptanceViewController {#psAcceptanceViewController}
-You can optionally choose to utilize the PSAcceptanceViewController in order to conveniently present to your users which contracts had major changes, what the changes were (if change summary is provided within PactSafe), and a PSClickWrap for users to easily accept the updated terms.
+You can optionally choose to utilize the PSAcceptanceViewController in order to conveniently present to your users which contracts had major changes, what the changes were (if change summary is provided within PactSafe), and an opportunity to accept them.
 
 #### What it Looks Like
 We provide a simple implementation that can be easily customized to incorporate your brand styling. More on styling later in the documentation.
@@ -290,7 +291,22 @@ By getting these details and using a UIAlertController, you could show an alert.
 
 ## Using the signedStatus Method
 
+The `signedStatus` method gives you the opportuntiy to check on the status of acceptance within a specific PactSafe group. Using it is fairly easy.
 
+```swift
+// Example
+let signerId = "test@pactafe.com"
+let psGroupKey = "example-group-key"
+
+// The signedStatus method will return a boolean of whether the specified signer id has accepted all contracts within the group key. If they they do need to accept a more recent version, the ids of contracts will be returned in an array [String].
+ps.signedStatus(for: signerId, groupKey: psGroupKey) { (needsAcceptance, contractIds) in 
+    if needsAcceptance {
+      // Show contract updates
+    } else {
+      self.segueHome()
+    }
+}
+```
 
 
 
@@ -317,13 +333,43 @@ func send(for signerId: String) {
 ## Customizing Acceptance Data {#customizing-acceptance-data}
 By default, when you send an activity event with the SDK, some additional information about the device will be sent to PactSafe.
 
-The following data will be sent by default and is documented here to avoid potential duplication as you work on planning custom data you may pass to PactSafe.
+There are two parts of data that will be sent as part of the activity event, which you may want to reference as you are implementing the SDK.
+
+- Connection Data
+- Custom Data
+
+### Connection Data
+Below, you'll find information on what to expect the SDK to send over as part of the activity event as "Connection Data", which is viewable within a PactSafe activity record. Many of the properties are set upon initialization except the optional properties (marked as optional below) using the following Apple APIs: `UIDevice`, `Locale`, and `TimeZone`. If you need further information about these properties, please reach out to us directly.
+
+| Property                | Description                                                  | Overridable |
+| ----------------------- | ------------------------------------------------------------ | ----------- |
+| `clientLibrary`         | The client library name being used that is sent as part of the activity. | No          |
+| `clientVersion`         | The client library version being used that is sent as part of the activity. | No          |
+| `deviceFingerprint`     | The unique identifier that is unique and usable to this device. | No          |
+| `environment`           | The mobile device category being used (e.g,. tablet or mobile). | No          |
+| `operatingSystem`       | The operating system and version of the device.              | No          |
+| `screenResolution`      | The screen resolution of the device.                         | No          |
+| `browserLocale`         | The current locale identifier of the device.                 | Yes         |
+| `browserTimezone`       | The current time zone identifier of the device.              | Yes         |
+| `pageDomain` (Optional) | The domain of the page being viewed. *Note: This is normally for web pages but is available to be populated if needed.* | Yes         |
+| `pagePath` (Optional)   | The path of the page being viewed. *Note: This is normally for web pages but is available to be populated if needed.* | Yes         |
+| `pageQuery` (Optional)  | The query path on the page being viewed. *Note: This is normally for web pages but is available to be populated if needed.* | Yes         |
+| `pageTitle` (Optional)  | The title of the page being viewed. *Note: This is normally for web pages but is available to be populated if you'd like to use the title of the screen where the PactSafe activity is occurring.* | Yes         |
+| `pageUrl` (Optional)    | The URL of the page being viewed. Note: This is normally for web pages but is available to be populated if needed. | Yes         |
+| `referrer` (Optional)   | The referred of the page being viewed. *Note: This is normally for web pages but is avaialble to be populated if needed.* | Yes         |
 
 
-- **Device Name:** `UIDevice.current.name`
-- **Device System Name:** `UIDevice.current.systemName`
-- **Device System Version:** `UIDevice.current.systemVersion`
-- **Device Identifier for Vendor:** `UIDevice.current.identifierForVendor?.uuidString` (is an optional, which may result in it being an empty string)
-- **Locale Identifier:** `Locale.current.identifier`
-- **Locale Region Code:** `Locale.current.regionCode` (is an optional, which may result in it being an empty string)
-- **Time Zone Identifier:** `TimeZone.current.identifier`
+
+### Custom Data
+
+Custom Data will typically house additional information that you'd like to pass over that will be appended to the activty event. By adding Custom Data to the event, you'll be able to search and filter based on specific custom data within the PactSafe app, which can be beneficial when you have many activity events.
+
+Before sending an activity event, you may want to customize properties on `PSCustomData` that can be set. Be sure to note that properties such as `firstName`, `lastName`, `companyName`, and `title` that are properties on `PSCustomData` are reserved for PactSafe usage only (like seeing the name of an individual within the PactSafe app).
+
+| Property        | Description                                                  | Overridable |
+| --------------- | ------------------------------------------------------------ | ----------- |
+| `iosDeviceName` | The name of the user's iOS device (e.g., John Doe's iPhone 8). | No          |
+| `firstName`     | First Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
+| `lastName`      | Last Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
+| `companyName`   | Company Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
+| `title`         | Title is a reserved property for custom data in PactSafe but can be set. | Yes         |

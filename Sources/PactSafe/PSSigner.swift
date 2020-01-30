@@ -11,12 +11,14 @@ import Foundation
 
 public typealias PSSignerID = String
 
+/// The PSSigner holds the signer ID and custom data that you'd like to be sent to PactSafe.
 public struct PSSigner {
     
     public var signerId: PSSignerID
     public var customData: PSCustomData
     
-    public init(signerId: PSSignerID, customData: PSCustomData = PSCustomData()) {
+    public init(signerId: PSSignerID,
+                customData: PSCustomData = PSCustomData()) {
         self.signerId = signerId
         self.customData = customData
     }
