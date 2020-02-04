@@ -1,17 +1,10 @@
 # PactSafe iOS SDK
 
-1. [Requirements](#requirements)
-2. [Getting Started](#getting-started)
-	* [Integration](#integration)
-	* [Notes for Getting Started](#notes-getting-started)
-3. [Usage](#usage)
-	* [Configure and Initialize](#configure-and-initialization)
-	* [Loading a Clickwrap](#loading-clickwrap)
-	* [Checking Acceptance](#checking-acceptance)
-	* [Send Activity Manually](#send-activity-manually)
-	* [Customizing Acceptance Data](#customizing-acceptance-data)
 
-## Requirements {#requirements}
+
+[TOC]
+
+## Requirements
 
 - Xcode 11 or higher
 - Target iOS 10.0 or higher
@@ -21,55 +14,49 @@
 - PactSafe Site Access ID
 - PactSafe API Access
 
+## Installation
 
-
-## Getting Started {#getting-started}
-
-### Integration {#integration}
-#### Swift Package Manager
+### Swift Package Manager
 You can use the [Swift Package Manager](https://swift.org/package-manager/) to install the PactSafe SDK:
 
 https://github.com/pactsafe/pactsafe-ios-sdk.git
 
-#### CocoaPods
+### CocoaPods
 You can use [CocoaPods](http://cocoapods.org/) to install the PactSafe SDK by adding it to your Podfile:
 
 ```swift
-	platform :ios, '10.0'
-	use_frameworks!
+platform :ios, '10.0'
+use_frameworks!
 
-	target 'MyApp' do
-	    pod 'PactSafe', '~> 1.0'
-	end
+target 'MyApp' do
+	pod 'PactSafe', '~> 1.0'
+end
 ```
 
-#### Carthage
+### Carthage
 You can use [Carthage](https://github.com/Carthage/Carthage) to install the PactSafe SDK by adding it to your Cartfile:
 
 ```swift
-	github "PactSafe/pactsafe-ios-sdk" ~> 4.0
+github "PactSafe/pactsafe-ios-sdk" ~> 4.0
 ```
 
-
-#### GitHub
+### GitHub
 Use the [GitHub repo](https://github.com/pactsafe/pactsafe-ios-sdk) to download the entire framework manually.
 
-***
 
 
+## Notes Before Getting Started
 
-### Notes for Getting Started {#notes-getting-started}
-
-#### Demo iOS App
+### Demo iOS App
 As you follow along in this guide, you may want to look at the PactSafe iOS Demo App as an example.
 
-#### Debug Mode
+### Debug Mode
 Something not quite working the way you expect or you need additional information as to what might not be working? No problem. Simply enable the `debugMode` property on `PSApp.shared`.
 
 ```swift
 PSApp.shared.debugMode = true
 ```
-#### Test Mode
+### Test Mode
 Optionally, set `testMode` to true as you are testing your implementation. This allows you to delete test data in your PactSafe site.
 
 Note: Don't forget to remove this line before you are finished!
@@ -78,11 +65,22 @@ Note: Don't forget to remove this line before you are finished!
 PSApp.shared.testMode = true
 ```
 
+### Data Types
+
+Before you start to implement, you may want to become familiar with a few data types used by the iOS SDK.
+
+| Name             | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| PSSignerID       | `PSSignerID` is a typealias for a String.                    |
+| PSSigner         | `PSSigner` is a struct that you'll use to send over your signer information. You must include a `signerId`, which is a `PSSignerID` or String that holds your unique signer ID that PactSafe holds. You can optionally pass over additional custom data with a `PSCustomData` struct, which is covered below. |
+| PSCustomData     | `PSCustomData` holds additional information about your signer and can be customized. Please see the properties that are available to be set in the [Customizing Acceptance Data](#customizing-acceptance-data) section. |
+| PSGroup          | `PSGroup` is a struct that holds information about a speciifc group (uses PactSafe group key) that is loaded from the PactSafe API. |
+| PSContract       | `PSContract` is a struct that holds information about contracts within a PactSafe `PSGroup`. |
+| PSConnectionData | The `PSConnectionData` struct [Customizing Acceptance Data](#customizing-acceptance-data) section. |
 
 
-## Usage {#usage}
 
-### Configure and Initalize the PactSafe SDK {#configure-and-initialization}
+## Configure and Initalize the PactSafe SDK
 In order to use the PactSafe SDK, you’ll need to import PactSafe into your UIApplicationDelegate:
 
 ```swift
@@ -91,7 +89,7 @@ import PactSafe
 
 Using the SDK also requires authentication, which you’ll want to set up in your `application:didFinishLaunchingWithOptions` delegate.
 
-Note: You MUST configure your PactSafe Site Access ID before using the PSApp shared instance!
+Note: You **<u>must</u>** configure your PactSafe Site Access ID before using the PSApp shared instance!
 
 ```swift
 PSApp.shared.configure(siteAccessId: "yourSiteAccessId")
@@ -99,69 +97,40 @@ PSApp.shared.configure(siteAccessId: "yourSiteAccessId")
 
 
 
-### Date Types
+## PSClickWrapView
 
-Before you start to implement, you may want to become familiar with a few data types used by the iOS SDK.
+The easiest way of getting started with using the PactSafe clickwrap is by utilizing our PSClickWrapView class to dynamically load your contracts into a UIView. The PSClickWrapView class conforms to the UIView class, which allows you to easily customize and format the clickwrap as needed.
 
-#### PSSignerID
+### Preloading Clickwrap Data
 
-The `PSSignerID` is only a typealias for a String.
-
-#### PSSigner
-
-The `PSSigner` is a Struct that you'll use to send over your signer information. You must include a `signerId`, which is a `PSSignerID` or String that holds your unique signer ID that PactSafe holds. You can optionally pass over additional custom data with a `PSCustomData` struct, which is covered below.
-
-#### PSCustomData
-
-The `PSCustomData` holds additional information about your signer and can be customized. Please see the properties that are available to be set in the [Customizing Acceptance Data](#customizing-acceptance-data) section.
-
-#### PSGroup
-
-The `PSGroup` is a Struct that holds information about a speciifc group (uses PactSafe group key) that is loaded from the PactSafe API.
-
-#### PSContract
-
-The `PSContract` is a Struct that holds information about contracts within a PactSafe `PSGroup`.
-
-#### PSConnectionData
-
-The `PSConnectionData` is a Struct that holds information about the current connection when sending acceptance to PactSafe. Please see the properties that are available to be set in the [Customizing Acceptance Data](#customizing-acceptance-data) section.
-
-
-
-### Loading a Clickwrap {#loading-clickwrap}
-
-The easiest way of getting started with using the PactSafe clickwrap is by utilizing our PSClickWrap class to dynamically load your contracts into a UIView. The PSClickWrap class conforms to the UIView class, which allows you to easily customize and format the clickwrap as needed.
-
-#### Preloading Clickwrap Data
-
-Since your PSClickWrap class will load contracts from your PactSafe site via our API, you may want to preload the data with your group key before you plan on displaying the clickwrap. By preloading, a user will less likely see any sort of loading when they get to the screen that contains the PSClickWrap.
+Since your `PSClickWrapView` class will load contracts for the specified PactSafe group, you may want to preload the data using your group key before displaying the clickwrap. By preloading, a user will be less likely see loading when they get to the screen that contains the PSClickWrapView.
 
 To preload your PactSafe group data, you can use the `preload` method on the PSApp shared instance within your AppDelegate. Example below:
 
 ```swift
-	PSApp.shared.preload(withGroupKey: "example-pactsafe-group-key")
+// Do this after you configure your PSApp shared instance!
+PSApp.shared.preload(withGroupKey: "example-pactsafe-group-key")
 ```
 
 By using the `preload` method, the data is stored using the iOS URLCache class in memory only.
 
-#### Initialize PSClickWrap Class
+### Load a PSClickWrapView Class
 
-The PSClickWrap class utilizes the default UIView initializers, giving you flexibility with implementation. You can implement in the following ways:
+The PSClickWrapView class is built on top of a UIView, which gives you flexibility in your implementation. You can implement in the following ways:
 
 - **Interface Builder** - add the custom class to a UIView within your storyboard that will load your PactSafe clickwrap.
-- **Programatically** - programatically gives you the most flexibility imlementing the PactSafe clickwrap into your project. 
+- **Programmatically** - programmatically gives you the most flexibility imlementing the PactSafe clickwrap into your project. 
 
-##### Interface Builder
-With an empty view in your storyboard, simply subclass the UIView with the PSClickWrap class. Once you subclass the UIView, you’ll need to do some configuring of the ClickWrap within your view controller.
+#### Interface Builder
+With an empty view in your storyboard, simply subclass the UIView with the PSClickWrapView class. Once you subclass the UIView, you’ll need to do some configuring of the ClickWrap within your view controller.
 
 *Note: Don't forget to import PactSafe into your view controller.*
 
-###### IBOutlet your Clickwrap
-Make sure to create an IBOutlet to your PSClickWrap UIView in order to customize it.
+##### IBOutlet your Clickwrap
+Make sure to create an IBOutlet to your PSClickWrapView UIView in order to customize it.
 
-###### Loads Contracts Into Your Clickwrap
-In order to get contracts to load into your clickwrap, you’ll need to use the loadContracts method, where you'll pass in your PactSafe group key.
+##### Loads Contracts Into Your Clickwrap
+In order to get contracts to load into your clickwrap, you’ll need to use the `loadContracts` method, where you'll pass in your PactSafe group key.
 
 ```swift
 override func viewWillAppear(_ animated: Bool) {
@@ -175,29 +144,48 @@ Once loaded, your clickwrap might look something like this:
 
 ![Example Loaded Clickwrap](./Documentation/images/clickwrap-loaded-example.png "User Flows")
 
-##### Progamatically
+#### Programmatically
+To use the `PSClickWrapView` class programmatically, you can use the default initializer that accept a frame with a `CGRect` size as you normally would while using UIView.
+
+```swift
+// Example of what might be in your UIViewController.
+private var clickWrap: PSClickWrapView?
+
+override func viewDidLoad() {
+  super.viewDidLoad()
+  configureClickWrap()
+}
+
+private func configureClickwrap() {
+  clickWrap = PSClickWrapView(frame: CGRect.zero)
+  guard let clickWrap = clickWrap else { return }
+  clickWrap.loadContracts(withGroupKey: "your-group-key")
+  // Insert your PSClickWrapView and do any additional setup.
+}
+```
 
 
 
-##### Configure Contracts Link Tap Behavior
-The PSClickWrap loads the text and links into a UITextView, which gives you some flexibility for customizing link tap behavior. By default, UITextView will take users out of your app and into Safari. If you'd rather keep users in your app, you can use a UITextViewDelegate to adjust the default behavior.
 
-###### Import Safari Services
+#### Configure Contracts Link Tap Behavior
+The `PSClickWrapView` loads the text and links into a `UITextView`, which gives you flexibility for customizing link tap behavior. By default, `UITextView` will take users out of your app and into Safari. If you'd rather keep users in your app, you can use a `UITextViewDelegate` to adjust the default behavior.
+
+##### Import Safari Services
 Within the view controller where you configured your clickwrap, you’ll need to import SafariServices.
 
 ```swift
 import SafariServices
 ```
 
-###### Configure Delegate
-The PSClickWrap contains a property `textView` that exposes the UITextView that holds your acceptance language and links to your terms.
+##### Configure PSClickWrapView UITextView Delegate
+The PSClickWrapView contains a property `textView` that exposes the UITextView that holds your acceptance language and links to your terms.
 
 ```swift
 // Assign the delegate to your view controller
 myClickWrap.textView.delegate = self
 ```
 
-###### Implement UITextViewDegate Protocol and Method
+##### Implement UITextViewDegate Protocol and Method
 Having assigned the delegate to your ViewController, you’ll need to add the UITextViewDelegate to your ViewController and use the `shouldInteractWith URL` method.
 
 ```swift
@@ -210,7 +198,7 @@ extension MyViewController: UITextViewDelegate {
 }
 ```
 
-##### Check if Checkbox is Selected {#check-checkbox-selected}
+#### Check if Checkbox is Selected
 Before letting a user submit the form, you may want to make sure that the checkbox is selected. To do so, you can monitor the value of the checkbox when you configure your clickwrap.
 
 ```swift
@@ -225,11 +213,11 @@ myClickWrap.checkbox.valueChanged = { (isChecked) in
 }
 ```
 
-##### Sending Acceptance
-When using PSClickWrap, you can easily send an "agreed" event once they have accepted your contracts. To do this, you'll pass along a signer to the method.
+#### Sending Acceptance
+When using `PSClickWrapView`, you can easily send an "agreed" event once they have accepted your contracts. To do this, you'll pass along a `PSSigner` to the `sendAgreed` method on your `PSClickWrapView` class.
 
 ```swift
-/// PSClickWrap has a method 'sendAgreed' that allows you to easily send acceptance using a signer id and any custom data.
+/// PSClickWrapView has a method 'sendAgreed' that allows you to easily send acceptance using a signer id and any custom data.
 let signer = PSSigner(signerId: signerId, customData: customData)
 myClickWrap.sendAgreed(signer: signer) { (response, error) in
     if error == nil {
@@ -258,15 +246,13 @@ myClickWrap.sendAgreed(signer: signer) { (response, error) in
 
 
 
-## Checking Acceptance {#checking-acceptance}
+## Checking Acceptance
 
-We provide a few of ways checking acceptance and optionally presenting if major version changes have been published. The following are three potential options.
+We provide a few of ways checking acceptance and optionally presenting information if major version changes have been published. The following are three potential options you may choose to use:
 
 - Using the signedStatus method
 - Using a PSAcceptanceViewController
 - Using signedStatus Method and Present Alert
-
-
 
 ### Using the signedStatus Method
 
@@ -276,7 +262,7 @@ The `signedStatus` method gives you the opportuntiy to check on the status of ac
 let signerId = "test@pactafe.com"
 let psGroupKey = "example-group-key"
 
-// The signedStatus method will return a boolean of whether the specified signer id has accepted all contracts within the group key. If they do need to accept a more recent version, the ids of contracts will be returned in an array [String].
+// The signedStatus method will return a boolean of whether the specified signer id has accepted all contracts within the group key. If they do need to accept a more recent version, the IDs of contracts will be returned in an array [String].
 ps.signedStatus(for: signerId, groupKey: psGroupKey) { (needsAcceptance, contractIds) in 
     if needsAcceptance {
       // Handle showing acceptance needed.
@@ -286,10 +272,8 @@ ps.signedStatus(for: signerId, groupKey: psGroupKey) { (needsAcceptance, contrac
 }
 ```
 
-
-
-### Using a PSAcceptanceViewController {#psAcceptanceViewController}
-You can optionally choose to utilize the PSAcceptanceViewController in order to conveniently present to your users which contracts had major changes, what the changes were (if change summary is provided within PactSafe), and an opportunity to accept them.
+### Using the PSAcceptanceViewController
+You can optionally choose to utilize the `PSAcceptanceViewController` in order to conveniently present to your users which contracts had major changes, what the changes were (if change summary is provided within PactSafe), and an opportunity to accept them.
 
 #### What it Looks Like
 We provide a simple implementation that can be easily customized to incorporate your brand styling. More on styling later in the documentation.
@@ -311,26 +295,40 @@ let groupKey: String = "my-pactsafe-group-key"
 */
 ps.signedStatus(for: signerId, in: groupKey) { (needsAcceptance, contractIds) in
     if needsAcceptance {
-        DispatchQueue.main.async {
-            /// Call the PSAcceptanceViewController with the group key, signer id, and contract ids that need to be accepted.
-            let psAcceptanceVc = PSAcceptanceViewController(groupKey, signerId, contractIds)
-            
-            // Since PSAcceptanceViewController conforms to UIViewController, you can configure your presentation.
-            psAcceptanceVc.modalPresentationStyle = .automatic
-            psAcceptanceVc.modalTransitionStyle = .coverVertical
-            self.present(psAcceptanceVc, animated: true, completion: nil)
-        }
+				// Call the PSAcceptanceViewController with the group key, signer id, and contract ids that need to be accepted.
+				let psAcceptanceVc = PSAcceptanceViewController(groupKey, signerId, contractIds)
+
+      // Since PSAcceptanceViewController conforms to UIViewController, you can configure your presentation.
+      psAcceptanceVc.modalPresentationStyle = .automatic
+      psAcceptanceVc.modalTransitionStyle = .coverVertical
+      self.present(psAcceptanceVc, animated: true, completion: nil)
     } else {
-        // No acceptance is needed, so move them to where they should go.
-        DispatchQueue.main.async {
-            self.segueToHome()
-        }
+      // No acceptance is needed, so move them to where they should go.
+      self.segueToHome()
     }
 }
 
 ```
 
-#### Receive Notice of Acceptance
+#### PSAcceptanceViewControllerDelegate
+
+You can use the `PSAcceptanceViewControllerDelegate` to receive events associated with the `PSAcceptanceViewController`.
+
+
+
+Available methods when you adopt to the protocol:
+
+| Method Definition                       | Description                                                  | Optional |
+| --------------------------------------- | ------------------------------------------------------------ | -------- |
+| `receivedAcceptance()`                  | Triggered when a successful submission of acceptance has been sent. | Yes      |
+| `errorSendingAcceptance(error: Error?)` | Triggered when there's an issue with sending acceptance.     | Yes      |
+| `checkboxIsSelected(_ checked: Bool)`   | Triggered when the checkbox is checked or unchecked.         | Yes      |
+| `errorLoadingGroup(error: Error?)`      | Triggered when there's an error loading the PactSafe group for the `PSClickWrapView`. | Yes      |
+
+
+
+##### Receive Notice of Acceptance
+
 You'll probably want to know if the user checked the box and then clicked submit. You'll need to adopt a `PSAcceptanceViewControllerDelegate` protocol to your ViewController and implement the `receivedAcceptance` method to know acceptance was received. Implementation may look something like this:
 
 ```swift
@@ -342,7 +340,7 @@ extension MyViewController: PSAcceptanceViewControllerDelegate {
 }
 ```
 
-### Using signedStatus Method and Present Alert {#present-alert}
+### Using signedStatus Method and Present Alert
 You may want a more simple approach of presenting that acceptance is needed or need greater customization. To get details around acceptance status, we provide two methods `signedStatus` and `loadGroup` that help you get the appropriate information for displaying to a user.
 
 ```swift
@@ -385,8 +383,6 @@ private func showContractUpdates(forSignerId signerId: String,
 				}
 			}
 	}
-
-
 ```
 
 By getting these details and using a UIAlertController, you could show an alert for the user that there have been updated terms and provide them a few available actions.
@@ -397,9 +393,9 @@ By getting these details and using a UIAlertController, you could show an alert 
 
 
 
-## Sending Activity Manually {#send-activity-manually}
+## Sending Activity Manually
 
-There may be times when you need to send an activity event manually. Doing so just requires using the `send` method on your PactSafe shared instance.
+There may be times when you need to send an activity event manually. Doing so just requires using the `sendActivity` method on your PactSafe shared instance.
 
 Here's an example method that would allow you to send acceptance:
 
@@ -413,7 +409,7 @@ func send(for signer: PSSigner) {
 }
 ```
 
-## Customizing Acceptance Data {#customizing-acceptance-data}
+## Customizing Acceptance Data
 By default, when you send an activity event with the SDK, some additional information about the device will be sent to PactSafe.
 
 There are two parts of data that will be sent as part of the activity event, which you may want to reference as you are implementing the SDK.

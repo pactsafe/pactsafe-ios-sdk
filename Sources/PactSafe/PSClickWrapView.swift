@@ -9,6 +9,12 @@ import UIKit
 
 public protocol PSClickWrapViewDelegate: AnyObject {
     func clickWrapRendered(withGroup groupData: PSGroup)
+    func errorLoadingGroup(error: Error?)
+}
+
+extension PSClickWrapViewDelegate {
+    // To allow for a non objective-c implementation.
+    func errorLoadingGroup(error: Error?) { }
 }
 
 @available(iOS 10.0, *)
@@ -36,7 +42,7 @@ public class PSClickWrapView: UIView {
 
     // MARK: - Initializers
 
-    override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         setupView()
     }
@@ -150,7 +156,6 @@ public class PSClickWrapView: UIView {
     }
     
     private func setupContraints() {
-        let textViewHeight = textView.sizeThatFits(CGSize(width: textView.frame.width, height: CGFloat.greatestFiniteMagnitude))
         NSLayoutConstraint.activate([
             checkbox.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8.0),
             checkbox.heightAnchor.constraint(equalToConstant: 25.0),
