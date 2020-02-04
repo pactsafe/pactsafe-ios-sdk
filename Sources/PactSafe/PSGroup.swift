@@ -1,5 +1,5 @@
 //
-//  PSGroupData.swift
+//  PSGroup.swift
 //  
 //
 //  Created by Tim Morse on 1/2/20.
@@ -15,7 +15,7 @@ public struct PSGroup: Codable {
     private let renderID: String?
     private let forceScroll, autoRun: Bool?
     
-    // Unusued and is currently always false.
+    /// Unusued and is currently always false.
     private let triggered: Bool?
     
     /// Note: Unused for the iOS SDK.
@@ -53,10 +53,10 @@ public struct PSGroup: Codable {
     public let legalCenterURL: String
     
     /// The acceptance language that is set within the group's settings.
-    public let acceptanceLanguage: String?
+    public let acceptanceLanguage: String
     
     /// The contracts data where the contract ID is the key.
-    public let contractData: [String: Contract]?
+    public let contractData: [String: PSContract]?
     
     /// The time (in epoch) of when the group was fetched.
     public let renderedTime: Int
@@ -110,8 +110,7 @@ public struct PSGroup: Codable {
     /// Returns the acceptance language without the specified parameter.
     /// This can be useful when wanting to remove handlebars set within the group setting.
     /// - Parameter parameter: The string you want to remove from the acceptance language.
-    public func cleanAcceptanceLanguage(of parameter: String) -> String? {
-        guard let acceptanceLanguage = acceptanceLanguage else { return nil }
+    public func cleanAcceptanceLanguage(of parameter: String) -> String {
         return acceptanceLanguage.replacingOccurrences(of: parameter, with: "")
     }
 }

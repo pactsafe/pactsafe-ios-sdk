@@ -24,7 +24,7 @@ public class PSSubmitButton: UIButton {
         return image
     }
 
-    func setBackgroundColor(_ color: UIColor, for state: UIControl.State) {
+    public func setBackgroundColor(_ color: UIColor, for state: UIControl.State) {
         self.setBackgroundImage(image(withColor: color), for: state)
     }
 }

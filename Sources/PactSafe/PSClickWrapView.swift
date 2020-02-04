@@ -23,24 +23,12 @@ public class PSClickWrapView: UIView {
     public var checkbox: PSCheckbox = PSCheckbox()
     
     /// The text view that displays acceptance language.
-    public var textView: UITextView = UITextView()
+    public var textView: PSClickWrapTextView = PSClickWrapTextView()
     
-    
-    public var contractIds: [String] = []
-    
-    
-    public var contractVersions: [String] = []
-    
-    
-    public var groupId: Int = 0
-    
-    
-    public var customAcceptanceLanguage: String?
-    
-    
+    /// Optionally override the acceptance language.
     public var overrideAcceptanceLanguage: NSMutableAttributedString?
     
-    
+    /// The group data retrieved when loading the clickwrap.
     public var groupData: PSGroup?
     
     /// The shared instance of PSApp class.
@@ -66,18 +54,18 @@ public class PSClickWrapView: UIView {
 
         // Configure TextView
         textView.translatesAutoresizingMaskIntoConstraints = false
-        textView.sizeToFit()
         textView.isEditable = false
-        textView.isScrollEnabled = false
+        textView.showsVerticalScrollIndicator = false
+        textView.showsHorizontalScrollIndicator = false
 
         addSubview(checkbox)
         addSubview(textView)
+        
+        textView.sizeToFit()
 
         setupContraints()
-    }
-    
-    public override func draw(_ rect: CGRect) {
         
+        textView.isScrollEnabled = false
     }
     
     // TODO: change filterContractsById to contractIds with filter parameter
@@ -86,16 +74,12 @@ public class PSClickWrapView: UIView {
         
         ps.loadGroup(groupKey: groupKey) { (groupData, error) in
             guard let groupData = groupData else {
-                self.handleNoGroupData()
                 return
             }
             
             self.groupData = groupData
-            self.groupId = groupData.id
-            self.contractIds = groupData.contracts.map({ String($0) })
-            self.contractVersions = groupData.versions
             
-            let acceptanceLanguage = groupData.acceptanceLanguage ?? "By clicking below, you agree to our {{contracts}}"
+            let acceptanceLanguage = groupData.acceptanceLanguage
             let acceptanceLanguageToReturn = self.clean(acceptanceLanguage, remove: "{{contracts}}")
             
             let contractsLinked: NSMutableAttributedString = NSMutableAttributedString()
@@ -139,15 +123,9 @@ public class PSClickWrapView: UIView {
         }
     }
     
-    // TODO: Tweak the main view to be able to handle if data is not present
-    private func handleNoGroupData() {
-        
-    }
-    
     public func sendAgreed(signer: PSSigner,
                            completion: @escaping (_ error: Error?) -> Void) {
         
-        // TODO: Handle no group data
         guard let groupData = self.groupData else { return }
         ps.sendActivity(.agreed, signer: signer, group: groupData) { (error) in
             completion(error)
@@ -172,6 +150,7 @@ public class PSClickWrapView: UIView {
     }
     
     private func setupContraints() {
+        let textViewHeight = textView.sizeThatFits(CGSize(width: textView.frame.width, height: CGFloat.greatestFiniteMagnitude))
         NSLayoutConstraint.activate([
             checkbox.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8.0),
             checkbox.heightAnchor.constraint(equalToConstant: 25.0),
@@ -185,5 +164,8 @@ public class PSClickWrapView: UIView {
         ])
         checkbox.setContentHuggingPriority(UILayoutPriority.required, for: .horizontal)
     }
+    
 
 }
+
+

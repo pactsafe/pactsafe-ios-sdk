@@ -14,16 +14,10 @@ public class PSApp {
     
     // MARK: - Properties
     
-    /**
-            Used to configure your PSApp shared instance.
-
-     - Important:
-     This is required to be configured before using the PSApp shared instance.
-     */
-    open var authentication: PSAuthentication!
-    
-    /// The URLSessino that can be overriden before interacting with any methods.
+    /// The URLSession that can be overriden before interacting with any methods.
     public var session: URLSession = URLSession.shared
+    
+    public var siteAccessId: String?
     
     /// When `testMode` is set to true, data sent to PactSafe can be deleted witin the PactSafe app dashboard.
     public var testMode: Bool = false
@@ -32,6 +26,8 @@ public class PSApp {
     public var debugMode: Bool = false
     
     private let queue = DispatchQueue(label: "PactSafeNetworking", qos: .userInitiated, attributes: .concurrent, autoreleaseFrequency: .inherit, target: .global())
+    
+    private var preloaded: Bool = false
     
     /// The shared instance of PSApp class.
     public static let shared: PSApp = {
@@ -42,6 +38,32 @@ public class PSApp {
     // MARK: -  Initializer
     private init( ) {}
     
+    public func configure(siteAccessId: String) {
+        self.siteAccessId = siteAccessId
+    }
+    
+    // MARK: - Preload Group Data
+    
+    public func preload(withGroupKey groupKey: String) {
+        
+        assertSetup()
+        
+        let urlComponents = groupUrlComponents(groupKey: groupKey)
+        guard let url = urlComponents.url else {
+            if self.debugMode { debugPrint(PSErrorMessages.constructUrlError) }
+            return
+        }
+        
+        getData(fromURL: url, cacheData: true) { (result) in
+            switch result {
+            case .success:
+                self.preloaded = true;
+            case .failure:
+                return
+            }
+        }
+    }
+    
     // MARK: - Activity API Methods
     
     public func sendActivity(_ type: PSActivityEvent,
@@ -50,6 +72,9 @@ public class PSApp {
                              connectionData: PSConnectionData = PSConnectionData(),
                              testMode: Bool = false,
                              completion: @escaping(_ error: Error?) -> Void) {
+        
+        assertSetup()
+        
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
         urlComponents.host = PSHostName.activityAPI.rawValue
@@ -64,7 +89,7 @@ public class PSApp {
             URLQueryItem(name: "gid", value: "\(group.id)"),
             URLQueryItem(name: "cnf", value: group.confirmationEmail.description),
             URLQueryItem(name: "tm", value: self.testMode.description),
-            URLQueryItem(name: "sid", value: self.authentication.siteAccessId)
+            URLQueryItem(name: "sid", value: self.siteAccessId)
         ]
         
         let connectionData = connectionData.urlQueryItems()
@@ -96,6 +121,8 @@ public class PSApp {
                              groupKey: String,
                              completion: @escaping(_ needsAcceptance: Bool, _ contractsIds: [String]?) -> Void) {
         
+        assertSetup()
+        
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
         urlComponents.host = PSHostName.activityAPI.rawValue
@@ -104,7 +131,7 @@ public class PSApp {
             URLQueryItem(name: "sig", value: signerId),
             URLQueryItem(name: "gkey", value: groupKey),
             URLQueryItem(name: "tm", value: self.testMode.description),
-            URLQueryItem(name: "sid", value: self.authentication.siteAccessId)
+            URLQueryItem(name: "sid", value: self.siteAccessId)
         ]
         
         guard let url = urlComponents.url else {
@@ -144,15 +171,10 @@ public class PSApp {
     
     public func loadGroup(groupKey: String,
                           completion: @escaping(_ group: PSGroup?, _ error: Error?) -> Void) {
-        var urlComponents = URLComponents()
-        urlComponents.scheme = "https"
-        urlComponents.host = PSHostName.activityAPI.rawValue
-        urlComponents.path = "/load/json"
-        urlComponents.queryItems = [
-            URLQueryItem(name: "sid", value: authentication.siteAccessId),
-            URLQueryItem(name: "gkey", value: groupKey)
-        ]
         
+        assertSetup()
+        
+        let urlComponents = groupUrlComponents(groupKey: groupKey)
         guard let url = urlComponents.url else {
             if self.debugMode { debugPrint(PSErrorMessages.constructUrlError) }
             return
@@ -175,39 +197,75 @@ public class PSApp {
     }
     
     // MARK: - Private Methods
+    
+    private func groupUrlComponents(groupKey: String) -> URLComponents {
+        var urlComponents = URLComponents()
+        urlComponents.scheme = "https"
+        urlComponents.host = PSHostName.activityAPI.rawValue
+        urlComponents.path = "/load/json"
+        urlComponents.queryItems = [
+            URLQueryItem(name: "sid", value: self.siteAccessId),
+            URLQueryItem(name: "gkey", value: groupKey)
+        ]
+        return urlComponents
+    }
 
     // MARK: Request Generation
+    
+    fileprivate func urlRequest(fromURL url: URL,
+                                cacheData: Bool = false) {
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "GET"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        
+    }
 
     fileprivate func getData(fromURL url: URL,
+                             cacheData: Bool = false,
                              completion: @escaping (Result<Data, Error>) -> Void) {
         
         queue.async {
             
-            guard var urlRequest = self.authentication.authenticatedURLRequest(forURL: url) else { return }
+            var urlRequest = URLRequest(url: url)
             urlRequest.httpMethod = "GET"
-
-            // Get data for urlRequest and return data or errors to completion handler.
-            let task = self.session.dataTask(with: urlRequest) { data, response, error in
+            urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            let urlCache = URLCache.shared
+            
+            if let cachedResponse = urlCache.cachedResponse(for: urlRequest) {
                 let result: Result<Data, Error>
-                
-                if let error = error {
-                    if self.debugMode { debugPrint(error as Any) }
-                    result = .failure(error)
-                } else if let error = self.error(from: response) {
-                    if self.debugMode { debugPrint(response as Any) }
-                    result = .failure(error)
-                } else if let data = data {
-                    result = .success(data)
-                } else {
-                    result = .failure(PSNetworkError.noDataOrError)
-                }
-                
+                result = .success(cachedResponse.data)
                 DispatchQueue.main.async {
                     completion(result)
                 }
+            } else {
+                // Get data for urlRequest and return data or errors to completion handler.
+                let task = self.session.dataTask(with: urlRequest) { data, response, error in
+                    let result: Result<Data, Error>
+                    
+                    if let error = error {
+                        if self.debugMode { debugPrint(error as Any) }
+                        result = .failure(error)
+                    } else if let error = self.error(from: response) {
+                        if self.debugMode { debugPrint(response as Any) }
+                        result = .failure(error)
+                    } else if let data = data {
+                        result = .success(data)
+                        if cacheData, let response = response {
+                            let cachedResponse = CachedURLResponse(response: response, data: data, userInfo: nil, storagePolicy: .allowedInMemoryOnly)
+                            urlCache.storeCachedResponse(cachedResponse, for: urlRequest)
+                        }
+                    } else {
+                        result = .failure(PSNetworkError.noDataOrError)
+                    }
+                    
+                    DispatchQueue.main.async {
+                        completion(result)
+                    }
+                }
+                task.resume()
             }
-            task.resume()
-            
         }
     }
 
@@ -216,8 +274,9 @@ public class PSApp {
         
         queue.async {
             
-            guard var urlRequest = self.authentication.authenticatedURLRequest(forURL: url) else { return }
+            var urlRequest = URLRequest(url: url)
             urlRequest.httpMethod = "POST"
+            urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
             
             // Send data for URLRequest and return data or errors to completion handler.
             let task = self.session.dataTask(with: urlRequest) { data, response, error in
@@ -246,7 +305,7 @@ public class PSApp {
     
     // MARK: Authentication Check
     internal func assertSetup() {
-        guard authentication != nil else {
+        guard siteAccessId != nil else {
             assertionFailure("ERROR: This request requires authentication using your PactSafe Access ID.")
             return
         }
@@ -259,7 +318,6 @@ public class PSApp {
         }
 
         let statusCode = response.statusCode
-
         if statusCode >= 200 && statusCode <= 299 {
             return nil
         } else {

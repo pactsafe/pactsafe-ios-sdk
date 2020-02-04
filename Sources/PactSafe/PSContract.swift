@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Contract: Codable {
+public struct PSContract: Codable {
     
     /// The version ID of the published contract.
     public let publishedVersion: String

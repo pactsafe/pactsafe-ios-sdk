@@ -106,6 +106,7 @@ public class PSAcceptanceViewController: UIViewController {
         configureAndAddClickwrap()
         configureAndAddSubmitButton()
         setupConstraints()
+        checkboxAgreementView.sizeToFit()
     }
     
     private func configureAndAddMainViews() {
