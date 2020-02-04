@@ -1,8 +1,26 @@
 # PactSafe iOS SDK
 
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Notes Before Getting Started](#notes-before-getting-started)
+- [Configure and Initalize the PactSafe SDK](#configure-and-initalize-the-pactsafe-sdk)
+- [PSClickWrapView](#psclickwrapview)
+	- [Preloading Clickwrap Data](#preloading-clickwrap-data)
+	- [Loading Your Clickwrap](#loading-your-clickwrap)
+		- [Interface Builder](#interface-builder)
+		- [Programmatically](#programmatically)
+		- [Configure Contracts Link Tap Behavior](#configure-contracts-link-tap-behavior)
+		- [Check if Checkbox is Selected](#check-if-checkbox-is-selected)
+		- [Sending Acceptance](#sending-acceptance)
+- [Checking Acceptance](#checking-acceptance)
+	- [Using the signedStatus Method](#using-the-signedstatus-method)
+	- [Using the PSAcceptanceViewController](#using-the-psacceptanceviewcontroller)
+	- [Using signedStatus Method and Present Alert](#using-signedstatus-method-and-present-alert)
+- [Sending Activity Manually](#sending-activity-manually)
+- [Customizing Acceptance Data](#customizing-acceptance-data)
+	- [Connection Data](#connection-data)
+	- [Custom Data](#custom-data)
 
-
-[TOC]
 
 ## Requirements
 
@@ -114,7 +132,7 @@ PSApp.shared.preload(withGroupKey: "example-pactsafe-group-key")
 
 By using the `preload` method, the data is stored using the iOS URLCache class in memory only.
 
-### Load a PSClickWrapView Class
+### Loading Your Clickwrap
 
 The PSClickWrapView class is built on top of a UIView, which gives you flexibility in your implementation. You can implement in the following ways:
 
