@@ -28,15 +28,23 @@ public enum PSActivityEvent: String {
     case disagreed = "disagreed"
 }
 
-/// Used to confgiure the clickwrap style.
+/// Used to configure the clickwrap style.
 public enum PSClickWrapStyle: String {
     case combined
     case noCheckbox
 }
 
 /// The error messages used throughout the PactSafe SDK.
-public enum PSErrorMessages: String {
+enum PSErrorMessages: String {
     case constructUrlError = "Error constructing URL."
     case sendActivitySendError = "Error sending data."
-    case missingSiteAccesId = "Missing Site Access ID"
+    case missingSiteAccesId = "Missing Site Access ID."
+    case decodingError = "Error decoding data."
+    case encodingError = "Error encoding data."
+    case jsonSerializationError = "Error serializing data into JSON."
+}
+
+/// Networking error messages.
+enum PSNetworkError: Error {
+    case noDataOrError
 }

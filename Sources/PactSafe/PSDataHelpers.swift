@@ -9,22 +9,21 @@ import Foundation
 
 struct PSDataHelpers {
     
+    /// Escapes a string before being sent to the API.
     func escapeString(_ input: String) -> String {
-        let originalString = input
-        let escapedString = originalString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? ""
-        return escapedString
+        input.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? ""
     }
     
+    /// Formats the contract ids.
     func formatContractIds(_ contractIds: [String]?) -> String? {
         guard let contractIds = contractIds else { return nil }
-        let formattedIds = contractIds.map { String($0) }.joined(separator: ",")
-        return formattedIds
+        return contractIds.map { String($0) }.joined(separator: ",")
     }
     
+    /// Formats the contract versions.
     func formatContractVersions(_ contractVersions: [String]?) -> String? {
         guard let contractVersions = contractVersions else { return nil }
-        let formattedVersions = contractVersions.map { String($0) }.joined(separator: ",")
-        return formattedVersions
+        return contractVersions.map { String($0) }.joined(separator: ",")
     }
     
 }

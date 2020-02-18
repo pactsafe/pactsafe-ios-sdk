@@ -8,7 +8,13 @@
 import UIKit
 
 public protocol PSClickWrapViewDelegate: AnyObject {
-    func clickWrapRendered(withGroup groupData: PSGroupData)
+    func clickWrapRendered(withGroup groupData: PSGroup)
+    func errorLoadingGroup(error: Error?)
+}
+
+extension PSClickWrapViewDelegate {
+    // To allow for a non objective-c implementation.
+    func errorLoadingGroup(error: Error?) { }
 }
 
 @available(iOS 10.0, *)
@@ -23,32 +29,20 @@ public class PSClickWrapView: UIView {
     public var checkbox: PSCheckbox = PSCheckbox()
     
     /// The text view that displays acceptance language.
-    public var textView: UITextView = UITextView()
+    public var textView: PSClickWrapTextView = PSClickWrapTextView()
     
-    
-    public var contractIds: [String] = []
-    
-    
-    public var contractVersions: [String] = []
-    
-    
-    public var groupId: Int = 0
-    
-    
-    public var customAcceptanceLanguage: String?
-    
-    
+    /// Optionally override the acceptance language.
     public var overrideAcceptanceLanguage: NSMutableAttributedString?
     
-    
-    public var groupData: PSGroupData?
+    /// The group data retrieved when loading the clickwrap.
+    public var groupData: PSGroup?
     
     /// The shared instance of PSApp class.
     private let ps = PSApp.shared
 
     // MARK: - Initializers
 
-    override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         setupView()
     }
@@ -66,18 +60,18 @@ public class PSClickWrapView: UIView {
 
         // Configure TextView
         textView.translatesAutoresizingMaskIntoConstraints = false
-        textView.sizeToFit()
         textView.isEditable = false
-        textView.isScrollEnabled = false
+        textView.showsVerticalScrollIndicator = false
+        textView.showsHorizontalScrollIndicator = false
 
         addSubview(checkbox)
         addSubview(textView)
+        
+        textView.sizeToFit()
 
         setupContraints()
-    }
-    
-    public override func draw(_ rect: CGRect) {
         
+        textView.isScrollEnabled = false
     }
     
     // TODO: change filterContractsById to contractIds with filter parameter
@@ -86,16 +80,12 @@ public class PSClickWrapView: UIView {
         
         ps.loadGroup(groupKey: groupKey) { (groupData, error) in
             guard let groupData = groupData else {
-                self.handleNoGroupData()
                 return
             }
             
             self.groupData = groupData
-            self.groupId = groupData.id
-            self.contractIds = groupData.contracts.map({ String($0) })
-            self.contractVersions = groupData.versions
             
-            let acceptanceLanguage = groupData.acceptanceLanguage ?? "By clicking below, you agree to our {{contracts}}"
+            let acceptanceLanguage = groupData.acceptanceLanguage
             let acceptanceLanguageToReturn = self.clean(acceptanceLanguage, remove: "{{contracts}}")
             
             let contractsLinked: NSMutableAttributedString = NSMutableAttributedString()
@@ -105,8 +95,8 @@ public class PSClickWrapView: UIView {
                 let contractsCount = contractsData.count
                 for (_, contractData) in contractsData {
                     index += 1
-                    let title = contractData.title ?? ""
-                    let legalCenterUrl = (groupData.legalCenterURL ?? "") + "#" + (contractData.key ?? "")
+                    let title = contractData.title
+                    let legalCenterUrl = (groupData.legalCenterURL) + "#" + (contractData.key)
                     
                     let attributedString = NSMutableAttributedString(string: title)
                     attributedString.addAttribute(.foregroundColor, value: UIColor.white, range: NSRange(location: 0, length: attributedString.length))
@@ -139,22 +129,18 @@ public class PSClickWrapView: UIView {
         }
     }
     
-    // TODO: Tweak the main view to be able to handle if data is not present
-    private func handleNoGroupData() {
-        
-    }
-    
     public func sendAgreed(signer: PSSigner,
-                           completion: @escaping (_ response: URLResponse?, _ error: Error?) -> Void) {
+                           completion: @escaping (_ error: Error?) -> Void) {
         
-        // TODO: Handle no group data
         guard let groupData = self.groupData else { return }
-        ps.sendActivity(.agreed, signer: signer, group: groupData) { (response, error) in
-            completion(response, error)
+        ps.sendActivity(.agreed, signer: signer, group: groupData) { (error) in
+            completion(error)
         }
     }
     
-    private func clean(_ acceptanceLanguage: String, remove dynamicParameter: String) -> NSMutableAttributedString {
+    
+    private func clean(_ acceptanceLanguage: String,
+                       remove dynamicParameter: String) -> NSMutableAttributedString {
         let removeString = acceptanceLanguage.replacingOccurrences(of: dynamicParameter, with: "")
         let acceptanceLanguageToReturn = NSMutableAttributedString(string: removeString)
         DispatchQueue.main.async {
@@ -183,5 +169,8 @@ public class PSClickWrapView: UIView {
         ])
         checkbox.setContentHuggingPriority(UILayoutPriority.required, for: .horizontal)
     }
+    
 
 }
+
+

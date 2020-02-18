@@ -9,21 +9,23 @@ import Foundation
 import UIKit
 
 @available (iOS 10, *)
+
+/// The custom data that is sent as part of the activity to PactSafe.
 public struct PSCustomData: Codable {
     
     /// The name of the user's iOS device (e.g., John Doe's iPhone 8).
     private let iosDeviceName: String
     
-    /// First Name is a reserved property for custom data in PactSafe.
+    /// First Name is a reserved property for custom data in PactSafe but can be set.
     public var firstName: String?
     
-    /// Last Name is a reserved property for custom data in PactSafe.
+    /// Last Name is a reserved property for custom data in PactSafe but can be set.
     public var lastName: String?
     
-    /// Company Name is a reserved property for custom data in PactSafe.
+    /// Company Name is a reserved property for custom data in PactSafe but can be set.
     public var companyName: String?
     
-    /// Title is a reserved property for custom data in PactSafe.
+    /// Title is a reserved property for custom data in PactSafe but can be set.
     public var title: String?
     
     /// Returns a new initialized object containing the name of the device
@@ -36,12 +38,8 @@ public struct PSCustomData: Codable {
     public func escapedCustomData() -> String? {
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
-        let jsonData = try? encoder.encode(self)
-        if let data = jsonData {
-            let stringifyData = String(data: data, encoding: .utf8)
-            return stringifyData
-        } else {
-            return nil
-        }
+        guard let jsonData = try? encoder.encode(self) else { return nil }
+        let stringifyData = String(data: jsonData, encoding: .utf8)
+        return stringifyData
     }
 }

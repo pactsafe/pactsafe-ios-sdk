@@ -8,8 +8,12 @@
 import Foundation
 import UIKit
 
+/// Methods for managing events around the `PSAcceptanceViewController`.
 @objc public protocol PSAcceptanceViewControllerDelegate: AnyObject {
     @objc optional func receivedAcceptance()
+    @objc optional func errorSendingAcceptance(error: Error?)
+    @objc optional func checkboxIsChecked(_ checked: Bool)
+    @objc optional func errorLoadingGroup(error: Error?)
 }
 
 @available(iOS 11.0, *)
@@ -46,7 +50,6 @@ public class PSAcceptanceViewController: UIViewController {
     
     /// The object that acts as the delegate of the view controller.
     public weak var delegate: PSAcceptanceViewControllerDelegate?
-    
     
     // MARK: - Views
     
@@ -106,6 +109,7 @@ public class PSAcceptanceViewController: UIViewController {
         configureAndAddClickwrap()
         configureAndAddSubmitButton()
         setupConstraints()
+        checkboxAgreementView.sizeToFit()
     }
     
     private func configureAndAddMainViews() {
@@ -132,6 +136,7 @@ public class PSAcceptanceViewController: UIViewController {
         psClickWrap.checkbox.valueChanged = { (valueChanged) in
             self.configureSubmitButtonState(valueChanged)
             self.checkboxSelected = valueChanged
+            self.delegate?.checkboxIsChecked?(valueChanged)
         }
         psClickWrap.loadContracts(withGroupKey: groupKey)
     }
@@ -148,7 +153,7 @@ public class PSAcceptanceViewController: UIViewController {
         configureSubmitButtonState()
     }
     
-    private func addChangeSummaryText(groupData: PSGroupData) {
+    private func addChangeSummaryText(groupData: PSGroup) {
         let changeSummaryFormatted = changeSummary(groupData: groupData)
         self.changeSummary = changeSummaryFormatted
         self.changeSummaryTextView.text = changeSummaryFormatted
@@ -156,7 +161,7 @@ public class PSAcceptanceViewController: UIViewController {
     
     /// Creates a user-friendly view of the contracts that have changed and includes the
     /// the change summary if availlable.
-    private func changeSummary(groupData: PSGroupData?) -> String {
+    private func changeSummary(groupData: PSGroup?) -> String {
         guard let groupData = groupData else { return "" }
         
         guard let contractsData = groupData.contractData else { return "" }
@@ -171,7 +176,7 @@ public class PSAcceptanceViewController: UIViewController {
                 index += 1
                 if let contractIds = contractIds {
                     if contractIds.contains(contractIdKey) {
-                        let contractTitle = contractData.title ?? ""
+                        let contractTitle = contractData.title
                         changeSummaryString.append(contractTitle)
                         if index != contractsData.count && contractsData.count == 2 { changeSummaryString.append(" and ") }
                         if index == contractsData.count { changeSummaryString.append(".") }
@@ -181,7 +186,6 @@ public class PSAcceptanceViewController: UIViewController {
         }
         
         return changeSummaryString
-        
     }
     
     private func configureSubmitButtonState(_ state: Bool = false) {
@@ -191,25 +195,21 @@ public class PSAcceptanceViewController: UIViewController {
     
     @objc private func submitPressed(sender: UIButton) {
         if checkboxSelected {
-            // TODO: Make this easier
             let signer = PSSigner(signerId: self.signerId)
-            psClickWrap.sendAgreed(signer: signer) { (response, error) in
+            psClickWrap.sendAgreed(signer: signer) { (error) in
                 if error == nil {
                     DispatchQueue.main.async {
                         self.delegate?.receivedAcceptance?()
                         self.dismiss(animated: true, completion: nil)
                     }
                 } else {
-                    if self.ps.debugMode {
-                        debugPrint(error as Any)
-                    }
+                    self.delegate?.errorSendingAcceptance?(error: error)
                 }
             }
         }
     }
     
     private func setupConstraints() {
-        let clickwrapHeight = self.view.bounds.height / 3
         NSLayoutConstraint.activate([
             // Set up Contracts View
             contractsView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 16),
@@ -247,9 +247,12 @@ public class PSAcceptanceViewController: UIViewController {
 
 @available(iOS 11.0, *)
 extension PSAcceptanceViewController: PSClickWrapViewDelegate {
-    public func clickWrapRendered(withGroup groupData: PSGroupData) {
+    public func clickWrapRendered(withGroup groupData: PSGroup) {
         DispatchQueue.main.async {
             self.addChangeSummaryText(groupData: groupData)
         }
+    }
+    public func errorLoadingGroup(error: Error?) {
+        self.delegate?.errorLoadingGroup?(error: error)
     }
 }
