@@ -1,5 +1,5 @@
 //
-//  PSClickWrap.swift
+//  PSClickWrapView.swift
 //
 //
 //  Created by Tim Morse  on 10/7/19.
