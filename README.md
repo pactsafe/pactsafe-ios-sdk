@@ -262,6 +262,14 @@ myClickWrap.sendAgreed(signer: signer) { (response, error) in
 }
 ```
 
+#### PSClickWrapViewDelegate
+
+You can optionally use the `PSClickWrapViewDelegate` protocol to receive events for your `PSClickWrapView`. The following methods are available to be used:
+
+| Method Definition                                 | Description                                                | Optional |
+| ------------------------------------------------- | ---------------------------------------------------------- | -------- |
+| `clickWrapRendered(withGroup groupData: PSGroup)` | Triggered when a group has loaded and provides group data. | No       |
+| `errorLoadingGroup(error: Error?)`                | Triggered when there's an error loading the group data.    | Yes      |
 
 
 ## Checking Acceptance

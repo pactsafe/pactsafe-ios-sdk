@@ -217,8 +217,6 @@ public class PSApp {
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "GET"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        
     }
 
     fileprivate func getData(fromURL url: URL,
@@ -313,9 +311,7 @@ public class PSApp {
     
     // MARK: Helpers
     private func error(from response: URLResponse?) -> Error? {
-        guard let response = response as? HTTPURLResponse else {
-            return nil
-        }
+        guard let response = response as? HTTPURLResponse else { return nil }
 
         let statusCode = response.statusCode
         if statusCode >= 200 && statusCode <= 299 {
