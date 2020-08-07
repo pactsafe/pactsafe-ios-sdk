@@ -1,4 +1,4 @@
-![PactSafe Logo](Additional Documentation/images/pactsafe-logo.png)
+![PactSafe Logo](Additional%20Documentation/images/pactsafe-logo.png)
 
 
 
@@ -165,7 +165,7 @@ override func viewWillAppear(_ animated: Bool) {
 
 Once loaded, your clickwrap might look something like this:
 
-![Example Loaded Clickwrap](Additional Documentation/images/clickwrap-loaded-example.png)
+![Example Loaded Clickwrap](Additional%20Documentation/images/clickwrap-loaded-example.png)
 
 #### Programmatically
 To use the `PSClickWrapView` class programmatically, you can use the default initializer that accept a frame with a `CGRect` size as you normally would while using UIView.
@@ -309,7 +309,7 @@ You can optionally choose to utilize the `PSAcceptanceViewController` in order t
 #### What it Looks Like
 We provide a simple implementation that can be easily customized to incorporate your brand styling. More on styling later in the documentation.
 
-![Example PSAcceptanceViewController](Additional Documentation/images/psacceptanceviewcontroller-example.png "PSAcceptanceViewController")
+![Example PSAcceptanceViewController](Additional%20Documentation/images/psacceptanceviewcontroller-example.png "PSAcceptanceViewController")
 
 #### Setting It Up
 ```swift
@@ -418,7 +418,7 @@ By getting these details and using a UIAlertController, you could show an alert 
 
 
 
-![Example UIAlert](Additional Documentation/images/login-with-alert.png "UIAlert")
+![Example UIAlert](Additional%20Documentation/images/login-with-alert.png "UIAlert")
 
 
 
