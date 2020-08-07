@@ -277,7 +277,6 @@ You can optionally use the `PSClickWrapViewDelegate` protocol to receive events 
 | `errorLoadingGroup(error: Error?)`                | Triggered when there's an error loading the group data.    | Yes      |
 
 
-
 ## Checking Acceptance
 
 We provide a few of ways checking acceptance and optionally presenting information if major version changes have been published. The following are three potential options you may choose to use:
