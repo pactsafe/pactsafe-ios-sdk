@@ -1,4 +1,8 @@
-# PactSafe iOS SDK
+![PactSafe Logo](Additional Documentation/images/pactsafe-logo.png)
+
+
+
+# iOS SDK
 
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -66,10 +70,10 @@ Use the [GitHub repo](https://github.com/pactsafe/pactsafe-ios-sdk) to download 
 ## Notes Before Getting Started
 
 ### Demo iOS App
-As you follow along in this guide, you may want to look at the PactSafe iOS Demo App as an example.
+As you follow along in this guide, you may want to look at the PactSafe iOS Demo App as an example. You can pull down the [demo app here in GitHub](https://github.com/pactsafe/pactsafe-ios-sdk-demo).
 
 ### Debug Mode
-Something not quite working the way you expect or you need additional information as to what might not be working? No problem. Simply enable the `debugMode` property on `PSApp.shared`.
+Something not quite working the way you expect or you need additional information as to what might not be working? Simply enable the `debugMode` property on `PSApp.shared` to print additional information.
 
 ```swift
 PSApp.shared.debugMode = true
@@ -85,20 +89,21 @@ PSApp.shared.testMode = true
 
 ### Data Types
 
-Before you start to implement, you may want to become familiar with a few data types used by the iOS SDK.
+Before you start to implement, you will want to become familiar with a few data types used by the iOS SDK.
 
 | Name             | Description                                                  |
 | ---------------- | ------------------------------------------------------------ |
-| PSSignerID       | `PSSignerID` is a typealias for a String.                    |
-| PSSigner         | `PSSigner` is a struct that you'll use to send over your signer information. You must include a `signerId`, which is a `PSSignerID` or String that holds your unique signer ID that PactSafe holds. You can optionally pass over additional custom data with a `PSCustomData` struct, which is covered below. |
-| PSCustomData     | `PSCustomData` holds additional information about your signer and can be customized. Please see the properties that are available to be set in the [Customizing Acceptance Data](#customizing-acceptance-data) section. |
-| PSGroup          | `PSGroup` is a struct that holds information about a speciifc group (uses PactSafe group key) that is loaded from the PactSafe API. |
-| PSContract       | `PSContract` is a struct that holds information about contracts within a PactSafe `PSGroup`. |
-| PSConnectionData | The `PSConnectionData` struct [Customizing Acceptance Data](#customizing-acceptance-data) section. |
+| PSSignerID       | `PSSignerID` is a typealias for String.                      |
+| PSSigner         | `PSSigner` is a structure that you'll use to send over your signer information. You must include a signer ID (`PSSignerID`) when needing to send data to PactSafe. You can optionally pass over additional custom data with a `PSCustomData` struct, which is covered below. |
+| PSCustomData     | `PSCustomData` is a structure that holds additional information about the activity. Please see the properties that are available to be set in the [Customizing Acceptance Data](#customizing-acceptance-data) section. |
+| PSGroup          | `PSGroup` is a structure that holds information about a speciifc group (uses PactSafe group key) that is loaded from the PactSafe API. |
+| PSContract       | `PSContract` is a structure that holds information about contracts within a PactSafe group (`PSGroup`). |
+| PSConnectionData | The `PSConnectionData` structure holds information about the current connection [Customizing Acceptance Data](#customizing-acceptance-data) section. |
 
 
 
 ## Configure and Initalize the PactSafe SDK
+
 In order to use the PactSafe SDK, you’ll need to import PactSafe into your UIApplicationDelegate:
 
 ```swift
@@ -160,7 +165,7 @@ override func viewWillAppear(_ animated: Bool) {
 
 Once loaded, your clickwrap might look something like this:
 
-![Example Loaded Clickwrap](./Documentation/images/clickwrap-loaded-example.png "User Flows")
+![Example Loaded Clickwrap](Additional Documentation/images/clickwrap-loaded-example.png)
 
 #### Programmatically
 To use the `PSClickWrapView` class programmatically, you can use the default initializer that accept a frame with a `CGRect` size as you normally would while using UIView.
@@ -272,6 +277,7 @@ You can optionally use the `PSClickWrapViewDelegate` protocol to receive events 
 | `errorLoadingGroup(error: Error?)`                | Triggered when there's an error loading the group data.    | Yes      |
 
 
+
 ## Checking Acceptance
 
 We provide a few of ways checking acceptance and optionally presenting information if major version changes have been published. The following are three potential options you may choose to use:
@@ -304,7 +310,7 @@ You can optionally choose to utilize the `PSAcceptanceViewController` in order t
 #### What it Looks Like
 We provide a simple implementation that can be easily customized to incorporate your brand styling. More on styling later in the documentation.
 
-![Example PSAcceptanceViewController](./Documentation/images/psacceptanceviewcontroller-example.png "PSAcceptanceViewController")
+![Example PSAcceptanceViewController](Additional Documentation/images/psacceptanceviewcontroller-example.png "PSAcceptanceViewController")
 
 #### Setting It Up
 ```swift
@@ -340,8 +346,6 @@ ps.signedStatus(for: signerId, in: groupKey) { (needsAcceptance, contractIds) in
 
 You can use the `PSAcceptanceViewControllerDelegate` to receive events associated with the `PSAcceptanceViewController`.
 
-
-
 Available methods when you adopt to the protocol:
 
 | Method Definition                       | Description                                                  | Optional |
@@ -372,11 +376,11 @@ You may want a more simple approach of presenting that acceptance is needed or n
 ```swift
 /// Get the status for a specific signer in a group.
 ps.signedStatus(for: signerId, groupKey: groupKey) { (needsAcceptance, contractIds) in
-		if needsAcceptance {
-			self.showContractUpdates(forSignerId: signerId, password: passwordText)
-		} else {
-			// Handle next step
-		}
+    if needsAcceptance {
+        self.showContractUpdates(forSignerId: signerId, password: passwordText)
+    } else {
+      // Handle next step
+    }
 }
 
 private func showContractUpdates(forSignerId signerId: String,
@@ -415,7 +419,9 @@ By getting these details and using a UIAlertController, you could show an alert 
 
 
 
-![Example UIAlert](./Documentation/images/login-with-alert.png "UIAlert")
+![Example UIAlert](Additional Documentation/images/login-with-alert.png "UIAlert")
+
+
 
 
 
@@ -428,14 +434,17 @@ Here's an example method that would allow you to send acceptance:
 ```swift
 func send(for signer: PSSigner) {
     PSApp.shared.sendActivity(.agreed, signer: signer, group: groupData) { (error) in
-  	if error !== nil {
+    if error !== nil {
       print("Error sending acceptance.")
-    }                                                                       
-	}
+    }
+  }
 }
 ```
 
+
+
 ## Customizing Acceptance Data
+
 By default, when you send an activity event with the SDK, some additional information about the device will be sent to PactSafe.
 
 There are two parts of data that will be sent as part of the activity event, which you may want to reference as you are implementing the SDK.
@@ -444,7 +453,7 @@ There are two parts of data that will be sent as part of the activity event, whi
 - Custom Data
 
 ### Connection Data
-Below, you'll find information on what to expect the SDK to send over as part of the activity event as "Connection Data", which is viewable within a PactSafe activity record. Many of the properties are set upon initialization except the optional properties (marked as optional below) using the following Apple APIs: `UIDevice`, `Locale`, and `TimeZone`. If you need further information about these properties, please reach out to us directly.
+Below, you'll find information on what to expect the SDK to send over as part of the activity event as "Connection Data", which is viewable within a PactSafe activity record. Many of the properties are set upon initialization except the optional properties (marked optional below) and use the following Apple APIs: `UIDevice`, `Locale`, and `TimeZone`. If you need further information about these properties, please reach out to us directly.
 
 | Property                | Description                                                  | Overridable |
 | ----------------------- | ------------------------------------------------------------ | ----------- |
@@ -467,9 +476,9 @@ Below, you'll find information on what to expect the SDK to send over as part of
 
 ### Custom Data
 
-Custom Data will typically house additional information that you'd like to pass over that will be appended to the activty event. By adding Custom Data to the event, you'll be able to search and filter based on specific custom data within the PactSafe app, which can be beneficial when you have many activity events.
+Custom Data can hold additional information that you'd like to pass over that will be appended to the activity event. By adding Custom Data to the event, you'll be able to search and filter within the PactSafe web app, which can be beneficial when you have many activity events.
 
-Before sending an activity event, you may want to customize properties on `PSCustomData` that can be set. Be sure to note that properties such as `firstName`, `lastName`, `companyName`, and `title` that are properties on `PSCustomData` are reserved for PactSafe usage only (like seeing the name of an individual within the PactSafe app).
+Before sending an activity event, you may want to customize properties on `PSCustomData` that can be set. Be sure to note that properties such as `firstName`, `lastName`, `companyName`, and `title` that are properties on `PSCustomData` are reserved for PactSafe platform usage only (e.g., seeing the name of an individual within the PactSafe app).
 
 | Property        | Description                                                  | Overridable |
 | --------------- | ------------------------------------------------------------ | ----------- |

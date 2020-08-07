@@ -10,24 +10,26 @@ import Foundation
 @available(iOS 10.0, *)
 
 /// The entry point of the PSApp SDK, which is accessible via the `shared` instance.
-public class PSApp {
+public final class PSApp {
     
     // MARK: - Properties
     
     /// The URLSession that can be overriden before interacting with any methods.
     public var session: URLSession = URLSession.shared
     
+    /// The PactSafe Site Access ID.
     public var siteAccessId: String?
     
-    /// When `testMode` is set to true, data sent to PactSafe can be deleted witin the PactSafe app dashboard.
+    /// When `testMode` is set to true, data sent to PactSafe can be deleted witin the PactSafe dashboard.
     public var testMode: Bool = false
     
-    /// When set to true, additional errors will be printed from the device.
+    /// When set to true, additional errors will be printed to the device.
     public var debugMode: Bool = false
     
     private let queue = DispatchQueue(label: "PactSafeNetworking", qos: .userInitiated, attributes: .concurrent, autoreleaseFrequency: .inherit, target: .global())
     
-    private var preloaded: Bool = false
+    /// Whether a group was preloaded or not. Note: this does not guarantee the data exists in memory.
+    public var preloaded: Bool = false
     
     /// The shared instance of PSApp class.
     public static let shared: PSApp = {
@@ -59,6 +61,7 @@ public class PSApp {
             case .success:
                 self.preloaded = true;
             case .failure:
+                self.preloaded = false
                 return
             }
         }
@@ -88,15 +91,15 @@ public class PSApp {
             URLQueryItem(name: "vid", value: group.contractVersions),
             URLQueryItem(name: "gid", value: "\(group.id)"),
             URLQueryItem(name: "cnf", value: group.confirmationEmail.description),
-            URLQueryItem(name: "tm", value: self.testMode.description),
-            URLQueryItem(name: "sid", value: self.siteAccessId)
+            URLQueryItem(name: "tm", value: testMode.description),
+            URLQueryItem(name: "sid", value: siteAccessId)
         ]
         
         let connectionData = connectionData.urlQueryItems()
         urlComponents.queryItems = activityParameters + connectionData
         
         guard let url = urlComponents.url else {
-            if self.debugMode { debugPrint(PSErrorMessages.constructUrlError) }
+            if debugMode { debugPrint(PSErrorMessages.constructUrlError) }
             return
         }
         
@@ -130,8 +133,8 @@ public class PSApp {
         urlComponents.queryItems = [
             URLQueryItem(name: "sig", value: signerId),
             URLQueryItem(name: "gkey", value: groupKey),
-            URLQueryItem(name: "tm", value: self.testMode.description),
-            URLQueryItem(name: "sid", value: self.siteAccessId)
+            URLQueryItem(name: "tm", value: testMode.description),
+            URLQueryItem(name: "sid", value: siteAccessId)
         ]
         
         guard let url = urlComponents.url else {
@@ -176,7 +179,7 @@ public class PSApp {
         
         let urlComponents = groupUrlComponents(groupKey: groupKey)
         guard let url = urlComponents.url else {
-            if self.debugMode { debugPrint(PSErrorMessages.constructUrlError) }
+            if debugMode { debugPrint(PSErrorMessages.constructUrlError) }
             return
         }
         
@@ -204,7 +207,7 @@ public class PSApp {
         urlComponents.host = PSHostName.activityAPI.rawValue
         urlComponents.path = "/load/json"
         urlComponents.queryItems = [
-            URLQueryItem(name: "sid", value: self.siteAccessId),
+            URLQueryItem(name: "sid", value: siteAccessId),
             URLQueryItem(name: "gkey", value: groupKey)
         ]
         return urlComponents

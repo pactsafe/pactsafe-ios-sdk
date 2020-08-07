@@ -7,7 +7,6 @@
 
 import UIKit
 
-
 /// Custom version of the submit button used in the SDK.
 public class PSSubmitButton: UIButton {
     private func image(withColor color: UIColor) -> UIImage? {
