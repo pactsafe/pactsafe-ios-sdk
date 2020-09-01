@@ -470,14 +470,29 @@ Below, you'll find information on what to expect the SDK to send over as part of
 
 ### Custom Data
 
-Custom Data can hold additional information that you'd like to pass over that will be appended to the activity event. By adding Custom Data to the event, you'll be able to search and filter within the PactSafe web app, which can be beneficial when you have many activity events.
+Custom Data can hold additional information that you'd like to pass over that will be appended to the activity event. By adding Custom Data to the event, you'll be able to search and filter within the PactSafe web app, which is especially beneficial when you have many activity events.
 
-Before sending an activity event, you may want to customize properties on `PSCustomData` that can be set. Be sure to note that properties such as `firstName`, `lastName`, `companyName`, and `title` that are properties on `PSCustomData` are reserved for PactSafe platform usage only (e.g., seeing the name of an individual within the PactSafe app).
+Before sending an activity event, you may want to customize properties on `PSCustomData` that can be set. Please note that properties such as `firstName`, `lastName`, `companyName`, and `title` that are reserved properties on `PSCustomData` for PactSafe platform usage only (e.g., seeing the name of an individual within the PactSafe app) but can be set by you.
 
 | Property        | Description                                                  | Overridable |
 | --------------- | ------------------------------------------------------------ | ----------- |
-| `iosDeviceName` | The name of the user's iOS device (e.g., John Doe's iPhone 8). | No          |
 | `firstName`     | First Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
 | `lastName`      | Last Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
 | `companyName`   | Company Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
 | `title`         | Title is a reserved property for custom data in PactSafe but can be set. | Yes         |
+
+####Adding Additional Custom Data
+
+When you need to add your own custom data properties and values, you can easily do so by utilizing the `add(withKey key: String, value: Any)` method on `PSCustomData`, which accepts a key as a `String `and value of `Any`.
+
+Example adding your own custom data:
+
+```swift
+var customData = PSCustomData()
+customData.firstName = firstNameText
+customData.lastName = lastNameText
+customData.add(withKey: "myCustomKey", value: "myCustomValue")
+customData.add(withKey: "mySecondCustomKey", value: "mySecondCustomValue")
+```
+
+You can also remove a previously add key and value by using the method `remove(forKey key: String)`, which removes the value based on the key you previously used.

@@ -5,16 +5,12 @@
 //  Created by Tim Morse  on 9/17/19.
 //
 
-#if canImport(UIKit)
-import UIKit
+import Foundation
 
 @available (iOS 10, *)
 
 /// The custom data that is sent as part of the activity to PactSafe.
-public struct PSCustomData: Codable {
-    
-    /// The name of the user's iOS device (e.g., John Doe's iPhone 8).
-    private let iosDeviceName: String
+public struct PSCustomData {
     
     /// First Name is a reserved property for custom data in PactSafe but can be set.
     public var firstName: String?
@@ -28,19 +24,43 @@ public struct PSCustomData: Codable {
     /// Title is a reserved property for custom data in PactSafe but can be set.
     public var title: String?
     
+    /// Used to store default custom data keys/values and manually added key/value pairs.
+    private let allCustomData: NSMutableDictionary = NSMutableDictionary()
+    
     /// Returns a new initialized object containing the name of the device
     /// with the option to set additonal custom data to the Activity.
-    public init() {
-        self.iosDeviceName = UIDevice.current.name
+    public init() {}
+    
+    public func add(withKey key: String, value: Any) {
+        allCustomData.setValue(value, forKey: key)
+    }
+    
+    public func remove(forKey key: String) {
+        allCustomData.removeObject(forKey: key)
     }
 
     /// Escapes data to pass through to the PactSafe Activity API.
     public func escapedCustomData() -> String? {
-        let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
-        guard let jsonData = try? encoder.encode(self) else { return nil }
-        let stringifyData = String(data: jsonData, encoding: .utf8)
-        return stringifyData
+        if let firstName = firstName {
+            allCustomData.setValue(firstName, forKey: "firstName")
+        }
+        if let lastName = lastName {
+            allCustomData.setValue(lastName, forKey: "lastName")
+        }
+        if let companyName = companyName {
+            allCustomData.setValue(companyName, forKey: "companyName")
+        }
+        if let title = title {
+            allCustomData.setValue(title, forKey: "title")
+        }
+        do {
+            let jsonObj = try JSONSerialization.data(withJSONObject: allCustomData, options: [])
+            let jsonString = String(data: jsonObj, encoding: .utf8)
+            return jsonString
+        } catch {
+            print(error)
+            return nil
+        }
     }
+    
 }
-#endif
