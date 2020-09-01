@@ -175,15 +175,15 @@ To use the `PSClickWrapView` class programmatically, you can use the default ini
 private var clickWrap: PSClickWrapView?
 
 override func viewDidLoad() {
-  super.viewDidLoad()
-  configureClickWrap()
+    super.viewDidLoad()
+    configureClickWrap()
 }
 
 private func configureClickwrap() {
-  clickWrap = PSClickWrapView(frame: CGRect.zero)
-  guard let clickWrap = clickWrap else { return }
-  clickWrap.loadContracts(withGroupKey: "your-group-key")
-  // Insert your PSClickWrapView and do any additional setup.
+    clickWrap = PSClickWrapView(frame: CGRect.zero)
+    guard let clickWrap = clickWrap else { return }
+    clickWrap.loadContracts(withGroupKey: "your-group-key")
+    // Insert your PSClickWrapView and do any additional setup.
 }
 ```
 
@@ -214,9 +214,9 @@ Having assigned the delegate to your ViewController, you’ll need to add the UI
 ```swift
 extension MyViewController: UITextViewDelegate {
     func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-	    let safariVc = SFSafariViewController(url: URL)
-	    present(safariVc, animated: true, completion: nil)
-	    return false
+        let safariVc = SFSafariViewController(url: URL)
+        present(safariVc, animated: true, completion: nil)
+        return false
     }
 }
 ```
@@ -229,9 +229,9 @@ Before letting a user submit the form, you may want to make sure that the checkb
 myClickWrap.checkbox.valueChanged = { (isChecked) in
     // If checked, enable (true) your UIButton submit button otherwise ensure it's disabled (false). You may want to also adjust the style of your button here as well.
     if isChecked {
-        self.yourSubmitButton.isEnabled = true
+    	self.yourSubmitButton.isEnabled = true
     } else {
-        self.yourSubmitButton.isEnabled = false
+    	self.yourSubmitButton.isEnabled = false
     }
 }
 ```
@@ -245,7 +245,7 @@ let signer = PSSigner(signerId: signerId, customData: customData)
 myClickWrap.sendAgreed(signer: signer) { (response, error) in
     if error == nil {
         // Use PSCustomData to send additional data about the activity
-      	var customData = PSCustomData()
+        var customData = PSCustomData()
         customData.firstName = firstNameText
         customData.lastName = lastNameText
 
@@ -254,13 +254,12 @@ myClickWrap.sendAgreed(signer: signer) { (response, error) in
                 
         // Use the sendAgreed method on the clickwrap to send acceptance.
         self.pactSafeClickWrap.sendAgreed(signer: signer) { (error) in
-						if error == nil {
+            if error == nil {
                 // Handle next step
-             } else {
+            } else {
                 // Handle error
-             }
-          }
-       }
+            }
+        }
     } else {
         // Handle error
     }
@@ -296,9 +295,9 @@ let psGroupKey = "example-group-key"
 // The signedStatus method will return a boolean of whether the specified signer id has accepted all contracts within the group key. If they do need to accept a more recent version, the IDs of contracts will be returned in an array [String].
 ps.signedStatus(for: signerId, groupKey: psGroupKey) { (needsAcceptance, contractIds) in 
     if needsAcceptance {
-      // Handle showing acceptance needed.
+        // Handle showing acceptance needed.
     } else {
-      self.segueHome()
+        self.segueHome()
     }
 }
 ```
@@ -326,16 +325,15 @@ let groupKey: String = "my-pactsafe-group-key"
 */
 ps.signedStatus(for: signerId, in: groupKey) { (needsAcceptance, contractIds) in
     if needsAcceptance {
-				// Call the PSAcceptanceViewController with the group key, signer id, and contract ids that need to be accepted.
-				let psAcceptanceVc = PSAcceptanceViewController(groupKey, signerId, contractIds)
-
-      // Since PSAcceptanceViewController conforms to UIViewController, you can configure your presentation.
-      psAcceptanceVc.modalPresentationStyle = .automatic
-      psAcceptanceVc.modalTransitionStyle = .coverVertical
-      self.present(psAcceptanceVc, animated: true, completion: nil)
+        // Call the PSAcceptanceViewController with the group key, signer id, and contract ids that need to be accepted.
+        let psAcceptanceVc = PSAcceptanceViewController(groupKey, signerId, contractIds)
+        // Since PSAcceptanceViewController conforms to UIViewController, you can configure your presentation.
+        psAcceptanceVc.modalPresentationStyle = .automatic
+        psAcceptanceVc.modalTransitionStyle = .coverVertical
+        self.present(psAcceptanceVc, animated: true, completion: nil)
     } else {
-      // No acceptance is needed, so move them to where they should go.
-      self.segueToHome()
+        // No acceptance is needed, so move them to where they should go.
+        self.segueToHome()
     }
 }
 
@@ -378,40 +376,37 @@ ps.signedStatus(for: signerId, groupKey: groupKey) { (needsAcceptance, contractI
     if needsAcceptance {
         self.showContractUpdates(forSignerId: signerId, password: passwordText)
     } else {
-      // Handle next step
+        // Handle next step
     }
 }
 
 private func showContractUpdates(forSignerId signerId: String,
                                  password passwordText: String,
                                  filterContractIds: [String]? = nil) {
-	self.ps.loadGroup(groupKey: self.groupKey) { (groupData, error) in
-		guard let groupData = groupData, let contractsData = groupData.contractData else { return }
-		self.psGroupData = groupData
-		
-		var titlesOfContracts = [String]()
-            
-		var updatedContractsMessage: String = "We've updated the following: "
-		
-		if let cidsFilter = filterContractIds {
-			contractsData.forEach { (key, value) in
-				if cidsFilter.contains(key) { titlesOfContracts.append(value.title) }
-					}
-				} else {
-					contractsData.forEach { (key, value) in
-					titlesOfContracts.append(value.title)
-				}
-			}
+                                 
+    self.ps.loadGroup(groupKey: self.groupKey) { (groupData, error) in
+        guard let groupData = groupData, let contractsData = groupData.contractData else { return }
+        self.psGroupData = groupData
+        var titlesOfContracts = [String]()    
+        var updatedContractsMessage: String = "We've updated the following: "
+        if let cidsFilter = filterContractIds {
+            contractsData.forEach { (key, value) in
+                if cidsFilter.contains(key) { titlesOfContracts.append(value.title) }
+            }
+        } else {
+            contractsData.forEach { (key, value) in
+                titlesOfContracts.append(value.title)
+            }
+        }
+        let contractTitles = titlesOfContracts.map { String($0) }.joined(separator: " and ")
+        updatedContractsMessage.append(contractTitles)
+        updatedContractsMessage.append(".\n \n Please agree to these changes.")
                                               
-			let contractTitles = titlesOfContracts.map { String($0) }.joined(separator: " and ")
-			updatedContractsMessage.append(contractTitles)
-			updatedContractsMessage.append(".\n \n Please agree to these changes.")
-                                              
-			let alert = self.updatedTermsAlert("Updated Terms", message: updatedContractsMessage, email: signerId, password: passwordText)
-					self.present(alert, animated: true, completion: nil)
-				}
-			}
-	}
+        let alert = self.updatedTermsAlert("Updated Terms", message: updatedContractsMessage, email: signerId, password: passwordText)
+        self.present(alert, animated: true, completion: nil)
+        }
+    }
+}
 ```
 
 By getting these details and using a UIAlertController, you could show an alert for the user that there have been updated terms and provide them a few available actions.
@@ -433,10 +428,10 @@ Here's an example method that would allow you to send acceptance:
 ```swift
 func send(for signer: PSSigner) {
     PSApp.shared.sendActivity(.agreed, signer: signer, group: groupData) { (error) in
-    if error !== nil {
-      print("Error sending acceptance.")
+        if error !== nil {
+            print("Error sending acceptance.")
+        }
     }
-  }
 }
 ```
 

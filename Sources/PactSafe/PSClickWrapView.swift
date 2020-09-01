@@ -5,6 +5,7 @@
 //  Created by Tim Morse  on 10/7/19.
 //
 
+#if canImport(UIKit)
 import UIKit
 
 public protocol PSClickWrapViewDelegate: AnyObject {
@@ -172,5 +173,4 @@ public class PSClickWrapView: UIView {
     
 
 }
-
-
+#endif

@@ -5,6 +5,7 @@
 //  Created by Tim Morse on 1/9/20.
 //
 
+#if canImport(UIKit)
 import UIKit
 
 /// The connection data that is sent to PactSafe as part of an activity.
@@ -77,3 +78,4 @@ public struct PSConnectionData: Codable {
     }
     
 }
+#endif

@@ -11,7 +11,7 @@ final class PactSafeTests: XCTestCase {
     override func setUp() {
         // Set up the shared app
         psApp = PSApp.shared
-        testSiteAccessId = ProcessInfo.processInfo.environment["testSiteAccessId"] ?? ""
+        testSiteAccessId = ProcessInfo.processInfo.environment["testSiteAccessId"]!
     }
     
     func testConfiguringSiteAccessId() {

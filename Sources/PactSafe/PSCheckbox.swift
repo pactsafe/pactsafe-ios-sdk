@@ -6,6 +6,7 @@
 //
 
 import Foundation
+#if canImport(UIKit)
 import UIKit
 
 protocol PSCheckboxDelegate {
@@ -295,3 +296,4 @@ public class PSCheckbox: UIControl {
     }
 
 }
+#endif

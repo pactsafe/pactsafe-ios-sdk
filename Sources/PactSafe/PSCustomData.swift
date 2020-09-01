@@ -5,7 +5,7 @@
 //  Created by Tim Morse  on 9/17/19.
 //
 
-import Foundation
+#if canImport(UIKit)
 import UIKit
 
 @available (iOS 10, *)
@@ -33,7 +33,7 @@ public struct PSCustomData: Codable {
     public init() {
         self.iosDeviceName = UIDevice.current.name
     }
-        
+
     /// Escapes data to pass through to the PactSafe Activity API.
     public func escapedCustomData() -> String? {
         let encoder = JSONEncoder()
@@ -43,3 +43,4 @@ public struct PSCustomData: Codable {
         return stringifyData
     }
 }
+#endif

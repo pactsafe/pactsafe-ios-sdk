@@ -6,6 +6,8 @@
 //
 
 import Foundation
+
+#if canImport(UIKit)
 import UIKit
 
 /// Methods for managing events around the `PSAcceptanceViewController`.
@@ -260,3 +262,5 @@ extension PSAcceptanceViewController: PSClickWrapViewDelegate {
         self.delegate?.errorLoadingGroup?(error: error)
     }
 }
+
+#endif
