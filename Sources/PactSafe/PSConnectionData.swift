@@ -15,7 +15,7 @@ public struct PSConnectionData: Codable {
     private let clientLibrary: String = "PactSafe iOS SDK"
     
     /// The client library version being used that is sent to PactSafe
-    private let clientVersion: String = "1.0.0"
+    private let clientVersion: String = "1.0.1"
     
     /// The unique identifier that is unique and usable to this device.
     private let deviceFingerprint: String

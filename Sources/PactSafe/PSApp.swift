@@ -13,7 +13,6 @@ import Foundation
 public final class PSApp {
     
     // MARK: - Properties
-    
     /// The URLSession that can be overriden before interacting with any methods.
     public var session: URLSession = URLSession.shared
     
@@ -28,8 +27,11 @@ public final class PSApp {
     
     private let queue = DispatchQueue(label: "PactSafeNetworking", qos: .userInitiated, attributes: .concurrent, autoreleaseFrequency: .inherit, target: .global())
     
-    /// Whether a group was preloaded or not. Note: this does not guarantee the data exists in memory.
+    /// Whether a group was preloaded or not.
+    /// Note: this does not guarantee the data exists in memory.
     public var preloaded: Bool = false
+    
+    private typealias DataHandler = (Result<Data, Error>) -> Void
     
     /// The shared instance of PSApp class.
     public static let shared: PSApp = {
@@ -38,7 +40,7 @@ public final class PSApp {
     }()
     
     // MARK: -  Initializer
-    private init( ) {}
+    private init() {}
     
     public func configure(siteAccessId: String) {
         self.siteAccessId = siteAccessId
@@ -46,23 +48,33 @@ public final class PSApp {
     
     // MARK: - Preload Group Data
     
-    public func preload(withGroupKey groupKey: String) {
+    public func preload(withGroupKey groupKey: String,
+                        refreshCacheData: Bool = false,
+                        completion: ((Bool) -> ())? = nil) {
         
         assertSetup()
         
         let urlComponents = groupUrlComponents(groupKey: groupKey)
         guard let url = urlComponents.url else {
             if self.debugMode { debugPrint(PSErrorMessages.constructUrlError) }
+            if let completion = completion {
+                completion(false)
+            }
             return
         }
         
-        getData(fromURL: url, cacheData: true) { (result) in
+        getData(fromURL: url, tryCache: !refreshCacheData, cacheResponse: true) { (result) in
             switch result {
             case .success:
                 self.preloaded = true;
+                if let completion = completion {
+                    completion(true)
+                }
             case .failure:
                 self.preloaded = false
-                return
+                if let completion = completion {
+                    completion(false)
+                }
             }
         }
     }
@@ -168,7 +180,6 @@ public final class PSApp {
             case .failure:
                 completion(needsAcceptance, contractIdsNeedAcceptance)
             }
-            
         }
     }
     
@@ -192,7 +203,6 @@ public final class PSApp {
                 } catch {
                     completion(nil, error)
                 }
-                
             case .failure(let error):
                 completion(nil, error)
             }
@@ -200,7 +210,6 @@ public final class PSApp {
     }
     
     // MARK: - Private Methods
-    
     private func groupUrlComponents(groupKey: String) -> URLComponents {
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
@@ -214,55 +223,34 @@ public final class PSApp {
     }
 
     // MARK: Request Generation
-    
-    fileprivate func urlRequest(fromURL url: URL,
-                                cacheData: Bool = false) {
-        var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = "GET"
-        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    }
-
-    fileprivate func getData(fromURL url: URL,
-                             cacheData: Bool = false,
-                             completion: @escaping (Result<Data, Error>) -> Void) {
+    private func getData(fromURL url: URL,
+                         tryCache: Bool = false,
+                         cacheResponse: Bool = false,
+                         completion: @escaping DataHandler) {
         
         queue.async {
-            
             var urlRequest = URLRequest(url: url)
             urlRequest.httpMethod = "GET"
             urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
             
             let urlCache = URLCache.shared
-            
-            if let cachedResponse = urlCache.cachedResponse(for: urlRequest) {
-                let result: Result<Data, Error>
-                result = .success(cachedResponse.data)
-                DispatchQueue.main.async {
-                    completion(result)
-                }
+            if tryCache, let cachedResponse = urlCache.cachedResponse(for: urlRequest) {
+                completion(.success(cachedResponse.data))
             } else {
                 // Get data for urlRequest and return data or errors to completion handler.
                 let task = self.session.dataTask(with: urlRequest) { data, response, error in
-                    let result: Result<Data, Error>
-                    
                     if let error = error {
                         if self.debugMode { debugPrint(error as Any) }
-                        result = .failure(error)
+                        completion(.failure(error))
                     } else if let error = self.error(from: response) {
                         if self.debugMode { debugPrint(response as Any) }
-                        result = .failure(error)
+                        completion(.failure(error))
                     } else if let data = data {
-                        result = .success(data)
-                        if cacheData, let response = response {
-                            let cachedResponse = CachedURLResponse(response: response, data: data, userInfo: nil, storagePolicy: .allowedInMemoryOnly)
-                            urlCache.storeCachedResponse(cachedResponse, for: urlRequest)
-                        }
+                        if cacheResponse { self.cacheUrlResponse(urlResponse: response, urlRequest: urlRequest, data: data) }
+                        completion(.success(data))
                     } else {
-                        result = .failure(PSNetworkError.noDataOrError)
-                    }
-                    
-                    DispatchQueue.main.async {
-                        completion(result)
+                        if self.debugMode { debugPrint(PSNetworkError.noDataOrError) }
+                        completion(.failure(PSNetworkError.noDataOrError))
                     }
                 }
                 task.resume()
@@ -270,38 +258,39 @@ public final class PSApp {
         }
     }
 
-    fileprivate func sendData(with url: URL,
-                              completion: @escaping (Result<Data, Error>) -> Void) {
+    private func sendData(with url: URL,
+                          completion: @escaping DataHandler) {
         
         queue.async {
-            
             var urlRequest = URLRequest(url: url)
             urlRequest.httpMethod = "POST"
             urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            
+
             // Send data for URLRequest and return data or errors to completion handler.
             let task = self.session.dataTask(with: urlRequest) { data, response, error in
-                let result: Result<Data, Error>
-                
                 if let error = error {
                     if self.debugMode { debugPrint(error as Any)}
-                    result = .failure(error)
+                    completion(.failure(error))
                 } else if let error = self.error(from: response) {
                     if self.debugMode { debugPrint(response as Any)}
-                    result = .failure(error)
+                    completion(.failure(error))
                 } else if let data = data {
-                    result = .success(data)
+                    completion(.success(data))
                 } else {
-                    result = .failure(PSNetworkError.noDataOrError)
-                }
-                
-                DispatchQueue.main.async {
-                    completion(result)
+                    completion(.failure(PSNetworkError.noDataOrError))
                 }
             }
             task.resume()
-            
         }
+    }
+    
+    private func cacheUrlResponse(urlResponse response: URLResponse?,
+                                  urlRequest: URLRequest,
+                                  data: Data) {
+        let urlCache = URLCache.shared
+        guard let response = response else { return }
+        let cachedResponse = CachedURLResponse(response: response, data: data, userInfo: nil, storagePolicy: .allowedInMemoryOnly)
+        urlCache.storeCachedResponse(cachedResponse, for: urlRequest)
     }
     
     // MARK: Authentication Check
@@ -320,7 +309,7 @@ public final class PSApp {
         if statusCode >= 200 && statusCode <= 299 {
             return nil
         } else {
-            return "Invalid server status code: \(statusCode)" as? Error
+            return PSNetworkError.notFoundError
         }
     }
 }

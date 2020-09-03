@@ -47,4 +47,5 @@ enum PSErrorMessages: String {
 /// Networking error messages.
 enum PSNetworkError: Error {
     case noDataOrError
+    case notFoundError
 }
