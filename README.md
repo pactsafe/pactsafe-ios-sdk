@@ -142,7 +142,7 @@ By using the `preload` method, the data is stored using the iOS URLCache class i
 The PSClickWrapView class is built on top of a UIView, which gives you flexibility in your implementation. You can implement in the following ways:
 
 - **Interface Builder** - add the custom class to a UIView within your storyboard that will load your PactSafe clickwrap.
-- **Programmatically** - programmatically gives you the most flexibility imlementing the PactSafe clickwrap into your project. 
+- **Programmatically** - programmatically gives you the most flexibility implementing the PactSafe clickwrap into your project. 
 
 #### Interface Builder
 With an empty view in your storyboard, simply subclass the UIView with the PSClickWrapView class. Once you subclass the UIView, you’ll need to do some configuring of the ClickWrap within your view controller.

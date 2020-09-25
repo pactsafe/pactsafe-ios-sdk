@@ -23,7 +23,6 @@ public struct PSGroup: Codable {
     /// A contract will only be displayed if the signer hasn't accepted the latest version.
     private let displayAll: Bool?
     
-    
     // MARK: - Public properties
     /// The group key.
     public let key: String

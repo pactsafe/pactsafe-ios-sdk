@@ -9,7 +9,7 @@
 import UIKit
 
 /// The connection data that is sent to PactSafe as part of an activity.
-public struct PSConnectionData: Codable {
+public struct PSConnectionData: Encodable {
     
     /// The client library being used that is sent to PactSafe.
     private let clientLibrary: String = "PactSafe iOS SDK"

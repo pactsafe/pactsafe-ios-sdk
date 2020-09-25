@@ -31,10 +31,17 @@ public struct PSCustomData {
     /// with the option to set additonal custom data to the Activity.
     public init() {}
     
+    
+    /// Add a custom data attribute to the record.
+    /// - Parameters:
+    ///   - key: The name of the property.
+    ///   - value: The value of the property.
     public func add(withKey key: String, value: Any) {
         allCustomData.setValue(value, forKey: key)
     }
     
+    /// Remove a custom data attribute by it's key.
+    /// - Parameter key: The name of the property.
     public func remove(forKey key: String) {
         allCustomData.removeObject(forKey: key)
     }

@@ -14,7 +14,7 @@ protocol PSCheckboxDelegate {
 }
 
 /// Checkbox is a simple, animation free checkbox and UISwitch alternative designed
-/// to be performant and easy to implement. Originally created  (here)[https://github.com/BeauNouvelle/SimpleCheckbox]
+/// to be performant and easy to implement. Originally created (here)[https://github.com/BeauNouvelle/SimpleCheckbox]
 @available(iOS 10.0, *)
 public class PSCheckbox: UIControl {
 

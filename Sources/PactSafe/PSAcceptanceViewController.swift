@@ -165,7 +165,6 @@ public class PSAcceptanceViewController: UIViewController {
     /// the change summary if availlable.
     private func changeSummary(groupData: PSGroup?) -> String {
         guard let groupData = groupData else { return "" }
-        
         guard let contractsData = groupData.contractData else { return "" }
         
         var changeSummaryString: String = ""
@@ -260,6 +259,9 @@ extension PSAcceptanceViewController: PSClickWrapViewDelegate {
     }
     public func errorLoadingGroup(error: Error?) {
         self.delegate?.errorLoadingGroup?(error: error)
+    }
+    public func errorSendingAgreed(error: Error?) {
+        self.delegate?.errorSendingAcceptance?(error: error)
     }
 }
 
