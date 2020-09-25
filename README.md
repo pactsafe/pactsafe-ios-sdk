@@ -481,7 +481,7 @@ Before sending an activity event, you may want to customize properties on `PSCus
 | `companyName`   | Company Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
 | `title`         | Title is a reserved property for custom data in PactSafe but can be set. | Yes         |
 
-####Adding Additional Custom Data
+#### Adding Additional Custom Data
 
 When you need to add your own custom data properties and values, you can easily do so by utilizing the `add(withKey key: String, value: Any)` method on `PSCustomData`, which accepts a key as a `String `and value of `Any`.
 
