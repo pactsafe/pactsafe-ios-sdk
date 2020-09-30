@@ -51,7 +51,7 @@ platform :ios, '10.0'
 use_frameworks!
 
 target 'MyApp' do
-	pod 'PactSafe', '~> 1.0'
+	pod 'PactSafe', '~> 1.0.1'
 end
 ```
 
@@ -59,7 +59,7 @@ end
 You can use [Carthage](https://github.com/Carthage/Carthage) to install the PactSafe SDK by adding it to your Cartfile:
 
 ```swift
-github "PactSafe/pactsafe-ios-sdk" ~> 4.0
+github "pactSafe/pactsafe-ios-sdk" ~> 1.0.1
 ```
 
 ### GitHub
