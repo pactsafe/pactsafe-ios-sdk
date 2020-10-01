@@ -5,16 +5,17 @@
 //  Created by Tim Morse on 1/9/20.
 //
 
+#if canImport(UIKit)
 import UIKit
 
 /// The connection data that is sent to PactSafe as part of an activity.
-public struct PSConnectionData: Codable {
+public struct PSConnectionData: Encodable {
     
     /// The client library being used that is sent to PactSafe.
     private let clientLibrary: String = "PactSafe iOS SDK"
     
     /// The client library version being used that is sent to PactSafe
-    private let clientVersion: String = "1.0.0"
+    private let clientVersion: String = "1.0.1"
     
     /// The unique identifier that is unique and usable to this device.
     private let deviceFingerprint: String
@@ -77,3 +78,4 @@ public struct PSConnectionData: Codable {
     }
     
 }
+#endif

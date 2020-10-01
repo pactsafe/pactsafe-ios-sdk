@@ -1,4 +1,8 @@
-# PactSafe iOS SDK
+![PactSafe Logo](Additional%20Documentation/images/pactsafe-logo.png)
+
+
+
+# iOS SDK
 
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -47,7 +51,7 @@ platform :ios, '10.0'
 use_frameworks!
 
 target 'MyApp' do
-	pod 'PactSafe', '~> 1.0'
+	pod 'PactSafe', '~> 1.0.1'
 end
 ```
 
@@ -55,7 +59,7 @@ end
 You can use [Carthage](https://github.com/Carthage/Carthage) to install the PactSafe SDK by adding it to your Cartfile:
 
 ```swift
-github "PactSafe/pactsafe-ios-sdk" ~> 4.0
+github "pactSafe/pactsafe-ios-sdk" ~> 1.0.1
 ```
 
 ### GitHub
@@ -66,10 +70,10 @@ Use the [GitHub repo](https://github.com/pactsafe/pactsafe-ios-sdk) to download 
 ## Notes Before Getting Started
 
 ### Demo iOS App
-As you follow along in this guide, you may want to look at the PactSafe iOS Demo App as an example.
+As you follow along in this guide, you may want to look at the PactSafe iOS Demo App as an example. You can pull down the [demo app here in GitHub](https://github.com/pactsafe/pactsafe-ios-sdk-demo).
 
 ### Debug Mode
-Something not quite working the way you expect or you need additional information as to what might not be working? No problem. Simply enable the `debugMode` property on `PSApp.shared`.
+Something not quite working the way you expect or you need additional information as to what might not be working? Simply enable the `debugMode` property on `PSApp.shared` to print additional information.
 
 ```swift
 PSApp.shared.debugMode = true
@@ -85,20 +89,21 @@ PSApp.shared.testMode = true
 
 ### Data Types
 
-Before you start to implement, you may want to become familiar with a few data types used by the iOS SDK.
+Before you start to implement, you will want to become familiar with a few data types used by the iOS SDK.
 
 | Name             | Description                                                  |
 | ---------------- | ------------------------------------------------------------ |
-| PSSignerID       | `PSSignerID` is a typealias for a String.                    |
-| PSSigner         | `PSSigner` is a struct that you'll use to send over your signer information. You must include a `signerId`, which is a `PSSignerID` or String that holds your unique signer ID that PactSafe holds. You can optionally pass over additional custom data with a `PSCustomData` struct, which is covered below. |
-| PSCustomData     | `PSCustomData` holds additional information about your signer and can be customized. Please see the properties that are available to be set in the [Customizing Acceptance Data](#customizing-acceptance-data) section. |
-| PSGroup          | `PSGroup` is a struct that holds information about a speciifc group (uses PactSafe group key) that is loaded from the PactSafe API. |
-| PSContract       | `PSContract` is a struct that holds information about contracts within a PactSafe `PSGroup`. |
-| PSConnectionData | The `PSConnectionData` struct [Customizing Acceptance Data](#customizing-acceptance-data) section. |
+| PSSignerID       | `PSSignerID` is a typealias for String.                      |
+| PSSigner         | `PSSigner` is a structure that you'll use to send over your signer information. You must include a signer ID (`PSSignerID`) when needing to send data to PactSafe. You can optionally pass over additional custom data with a `PSCustomData` struct, which is covered below. |
+| PSCustomData     | `PSCustomData` is a structure that holds additional information about the activity. Please see the properties that are available to be set in the [Customizing Acceptance Data](#customizing-acceptance-data) section. |
+| PSGroup          | `PSGroup` is a structure that holds information about a speciifc group (uses PactSafe group key) that is loaded from the PactSafe API. |
+| PSContract       | `PSContract` is a structure that holds information about contracts within a PactSafe group (`PSGroup`). |
+| PSConnectionData | The `PSConnectionData` structure holds information about the current connection [Customizing Acceptance Data](#customizing-acceptance-data) section. |
 
 
 
 ## Configure and Initalize the PactSafe SDK
+
 In order to use the PactSafe SDK, you’ll need to import PactSafe into your UIApplicationDelegate:
 
 ```swift
@@ -137,7 +142,7 @@ By using the `preload` method, the data is stored using the iOS URLCache class i
 The PSClickWrapView class is built on top of a UIView, which gives you flexibility in your implementation. You can implement in the following ways:
 
 - **Interface Builder** - add the custom class to a UIView within your storyboard that will load your PactSafe clickwrap.
-- **Programmatically** - programmatically gives you the most flexibility imlementing the PactSafe clickwrap into your project. 
+- **Programmatically** - programmatically gives you the most flexibility implementing the PactSafe clickwrap into your project. 
 
 #### Interface Builder
 With an empty view in your storyboard, simply subclass the UIView with the PSClickWrapView class. Once you subclass the UIView, you’ll need to do some configuring of the ClickWrap within your view controller.
@@ -160,7 +165,7 @@ override func viewWillAppear(_ animated: Bool) {
 
 Once loaded, your clickwrap might look something like this:
 
-![Example Loaded Clickwrap](./Documentation/images/clickwrap-loaded-example.png "User Flows")
+![Example Loaded Clickwrap](Additional%20Documentation/images/clickwrap-loaded-example.png)
 
 #### Programmatically
 To use the `PSClickWrapView` class programmatically, you can use the default initializer that accept a frame with a `CGRect` size as you normally would while using UIView.
@@ -170,15 +175,15 @@ To use the `PSClickWrapView` class programmatically, you can use the default ini
 private var clickWrap: PSClickWrapView?
 
 override func viewDidLoad() {
-  super.viewDidLoad()
-  configureClickWrap()
+    super.viewDidLoad()
+    configureClickWrap()
 }
 
 private func configureClickwrap() {
-  clickWrap = PSClickWrapView(frame: CGRect.zero)
-  guard let clickWrap = clickWrap else { return }
-  clickWrap.loadContracts(withGroupKey: "your-group-key")
-  // Insert your PSClickWrapView and do any additional setup.
+    clickWrap = PSClickWrapView(frame: CGRect.zero)
+    guard let clickWrap = clickWrap else { return }
+    clickWrap.loadContracts(withGroupKey: "your-group-key")
+    // Insert your PSClickWrapView and do any additional setup.
 }
 ```
 
@@ -209,9 +214,9 @@ Having assigned the delegate to your ViewController, you’ll need to add the UI
 ```swift
 extension MyViewController: UITextViewDelegate {
     func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-	    let safariVc = SFSafariViewController(url: URL)
-	    present(safariVc, animated: true, completion: nil)
-	    return false
+        let safariVc = SFSafariViewController(url: URL)
+        present(safariVc, animated: true, completion: nil)
+        return false
     }
 }
 ```
@@ -224,9 +229,9 @@ Before letting a user submit the form, you may want to make sure that the checkb
 myClickWrap.checkbox.valueChanged = { (isChecked) in
     // If checked, enable (true) your UIButton submit button otherwise ensure it's disabled (false). You may want to also adjust the style of your button here as well.
     if isChecked {
-        self.yourSubmitButton.isEnabled = true
+    	self.yourSubmitButton.isEnabled = true
     } else {
-        self.yourSubmitButton.isEnabled = false
+    	self.yourSubmitButton.isEnabled = false
     }
 }
 ```
@@ -240,7 +245,7 @@ let signer = PSSigner(signerId: signerId, customData: customData)
 myClickWrap.sendAgreed(signer: signer) { (response, error) in
     if error == nil {
         // Use PSCustomData to send additional data about the activity
-      	var customData = PSCustomData()
+        var customData = PSCustomData()
         customData.firstName = firstNameText
         customData.lastName = lastNameText
 
@@ -249,13 +254,12 @@ myClickWrap.sendAgreed(signer: signer) { (response, error) in
                 
         // Use the sendAgreed method on the clickwrap to send acceptance.
         self.pactSafeClickWrap.sendAgreed(signer: signer) { (error) in
-						if error == nil {
+            if error == nil {
                 // Handle next step
-             } else {
+            } else {
                 // Handle error
-             }
-          }
-       }
+            }
+        }
     } else {
         // Handle error
     }
@@ -291,9 +295,9 @@ let psGroupKey = "example-group-key"
 // The signedStatus method will return a boolean of whether the specified signer id has accepted all contracts within the group key. If they do need to accept a more recent version, the IDs of contracts will be returned in an array [String].
 ps.signedStatus(for: signerId, groupKey: psGroupKey) { (needsAcceptance, contractIds) in 
     if needsAcceptance {
-      // Handle showing acceptance needed.
+        // Handle showing acceptance needed.
     } else {
-      self.segueHome()
+        self.segueHome()
     }
 }
 ```
@@ -304,7 +308,7 @@ You can optionally choose to utilize the `PSAcceptanceViewController` in order t
 #### What it Looks Like
 We provide a simple implementation that can be easily customized to incorporate your brand styling. More on styling later in the documentation.
 
-![Example PSAcceptanceViewController](./Documentation/images/psacceptanceviewcontroller-example.png "PSAcceptanceViewController")
+![Example PSAcceptanceViewController](Additional%20Documentation/images/psacceptanceviewcontroller-example.png "PSAcceptanceViewController")
 
 #### Setting It Up
 ```swift
@@ -321,16 +325,15 @@ let groupKey: String = "my-pactsafe-group-key"
 */
 ps.signedStatus(for: signerId, in: groupKey) { (needsAcceptance, contractIds) in
     if needsAcceptance {
-				// Call the PSAcceptanceViewController with the group key, signer id, and contract ids that need to be accepted.
-				let psAcceptanceVc = PSAcceptanceViewController(groupKey, signerId, contractIds)
-
-      // Since PSAcceptanceViewController conforms to UIViewController, you can configure your presentation.
-      psAcceptanceVc.modalPresentationStyle = .automatic
-      psAcceptanceVc.modalTransitionStyle = .coverVertical
-      self.present(psAcceptanceVc, animated: true, completion: nil)
+        // Call the PSAcceptanceViewController with the group key, signer id, and contract ids that need to be accepted.
+        let psAcceptanceVc = PSAcceptanceViewController(groupKey, signerId, contractIds)
+        // Since PSAcceptanceViewController conforms to UIViewController, you can configure your presentation.
+        psAcceptanceVc.modalPresentationStyle = .automatic
+        psAcceptanceVc.modalTransitionStyle = .coverVertical
+        self.present(psAcceptanceVc, animated: true, completion: nil)
     } else {
-      // No acceptance is needed, so move them to where they should go.
-      self.segueToHome()
+        // No acceptance is needed, so move them to where they should go.
+        self.segueToHome()
     }
 }
 
@@ -339,8 +342,6 @@ ps.signedStatus(for: signerId, in: groupKey) { (needsAcceptance, contractIds) in
 #### PSAcceptanceViewControllerDelegate
 
 You can use the `PSAcceptanceViewControllerDelegate` to receive events associated with the `PSAcceptanceViewController`.
-
-
 
 Available methods when you adopt to the protocol:
 
@@ -372,50 +373,49 @@ You may want a more simple approach of presenting that acceptance is needed or n
 ```swift
 /// Get the status for a specific signer in a group.
 ps.signedStatus(for: signerId, groupKey: groupKey) { (needsAcceptance, contractIds) in
-		if needsAcceptance {
-			self.showContractUpdates(forSignerId: signerId, password: passwordText)
-		} else {
-			// Handle next step
-		}
+    if needsAcceptance {
+        self.showContractUpdates(forSignerId: signerId, password: passwordText)
+    } else {
+        // Handle next step
+    }
 }
 
 private func showContractUpdates(forSignerId signerId: String,
                                  password passwordText: String,
                                  filterContractIds: [String]? = nil) {
-	self.ps.loadGroup(groupKey: self.groupKey) { (groupData, error) in
-		guard let groupData = groupData, let contractsData = groupData.contractData else { return }
-		self.psGroupData = groupData
-		
-		var titlesOfContracts = [String]()
-            
-		var updatedContractsMessage: String = "We've updated the following: "
-		
-		if let cidsFilter = filterContractIds {
-			contractsData.forEach { (key, value) in
-				if cidsFilter.contains(key) { titlesOfContracts.append(value.title) }
-					}
-				} else {
-					contractsData.forEach { (key, value) in
-					titlesOfContracts.append(value.title)
-				}
-			}
+                                 
+    self.ps.loadGroup(groupKey: self.groupKey) { (groupData, error) in
+        guard let groupData = groupData, let contractsData = groupData.contractData else { return }
+        self.psGroupData = groupData
+        var titlesOfContracts = [String]()    
+        var updatedContractsMessage: String = "We've updated the following: "
+        if let cidsFilter = filterContractIds {
+            contractsData.forEach { (key, value) in
+                if cidsFilter.contains(key) { titlesOfContracts.append(value.title) }
+            }
+        } else {
+            contractsData.forEach { (key, value) in
+                titlesOfContracts.append(value.title)
+            }
+        }
+        let contractTitles = titlesOfContracts.map { String($0) }.joined(separator: " and ")
+        updatedContractsMessage.append(contractTitles)
+        updatedContractsMessage.append(".\n \n Please agree to these changes.")
                                               
-			let contractTitles = titlesOfContracts.map { String($0) }.joined(separator: " and ")
-			updatedContractsMessage.append(contractTitles)
-			updatedContractsMessage.append(".\n \n Please agree to these changes.")
-                                              
-			let alert = self.updatedTermsAlert("Updated Terms", message: updatedContractsMessage, email: signerId, password: passwordText)
-					self.present(alert, animated: true, completion: nil)
-				}
-			}
-	}
+        let alert = self.updatedTermsAlert("Updated Terms", message: updatedContractsMessage, email: signerId, password: passwordText)
+        self.present(alert, animated: true, completion: nil)
+        }
+    }
+}
 ```
 
 By getting these details and using a UIAlertController, you could show an alert for the user that there have been updated terms and provide them a few available actions.
 
 
 
-![Example UIAlert](./Documentation/images/login-with-alert.png "UIAlert")
+![Example UIAlert](Additional%20Documentation/images/login-with-alert.png "UIAlert")
+
+
 
 
 
@@ -428,14 +428,17 @@ Here's an example method that would allow you to send acceptance:
 ```swift
 func send(for signer: PSSigner) {
     PSApp.shared.sendActivity(.agreed, signer: signer, group: groupData) { (error) in
-  	if error !== nil {
-      print("Error sending acceptance.")
-    }                                                                       
-	}
+        if error !== nil {
+            print("Error sending acceptance.")
+        }
+    }
 }
 ```
 
+
+
 ## Customizing Acceptance Data
+
 By default, when you send an activity event with the SDK, some additional information about the device will be sent to PactSafe.
 
 There are two parts of data that will be sent as part of the activity event, which you may want to reference as you are implementing the SDK.
@@ -444,7 +447,7 @@ There are two parts of data that will be sent as part of the activity event, whi
 - Custom Data
 
 ### Connection Data
-Below, you'll find information on what to expect the SDK to send over as part of the activity event as "Connection Data", which is viewable within a PactSafe activity record. Many of the properties are set upon initialization except the optional properties (marked as optional below) using the following Apple APIs: `UIDevice`, `Locale`, and `TimeZone`. If you need further information about these properties, please reach out to us directly.
+Below, you'll find information on what to expect the SDK to send over as part of the activity event as "Connection Data", which is viewable within a PactSafe activity record. Many of the properties are set upon initialization except the optional properties (marked optional below) and use the following Apple APIs: `UIDevice`, `Locale`, and `TimeZone`. If you need further information about these properties, please reach out to us directly.
 
 | Property                | Description                                                  | Overridable |
 | ----------------------- | ------------------------------------------------------------ | ----------- |
@@ -467,14 +470,29 @@ Below, you'll find information on what to expect the SDK to send over as part of
 
 ### Custom Data
 
-Custom Data will typically house additional information that you'd like to pass over that will be appended to the activty event. By adding Custom Data to the event, you'll be able to search and filter based on specific custom data within the PactSafe app, which can be beneficial when you have many activity events.
+Custom Data can hold additional information that you'd like to pass over that will be appended to the activity event. By adding Custom Data to the event, you'll be able to search and filter within the PactSafe web app, which is especially beneficial when you have many activity events.
 
-Before sending an activity event, you may want to customize properties on `PSCustomData` that can be set. Be sure to note that properties such as `firstName`, `lastName`, `companyName`, and `title` that are properties on `PSCustomData` are reserved for PactSafe usage only (like seeing the name of an individual within the PactSafe app).
+Before sending an activity event, you may want to customize properties on `PSCustomData` that can be set. Please note that properties such as `firstName`, `lastName`, `companyName`, and `title` that are reserved properties on `PSCustomData` for PactSafe platform usage only (e.g., seeing the name of an individual within the PactSafe app) but can be set by you.
 
 | Property        | Description                                                  | Overridable |
 | --------------- | ------------------------------------------------------------ | ----------- |
-| `iosDeviceName` | The name of the user's iOS device (e.g., John Doe's iPhone 8). | No          |
 | `firstName`     | First Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
 | `lastName`      | Last Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
 | `companyName`   | Company Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
 | `title`         | Title is a reserved property for custom data in PactSafe but can be set. | Yes         |
+
+#### Adding Additional Custom Data
+
+When you need to add your own custom data properties and values, you can easily do so by utilizing the `add(withKey key: String, value: Any)` method on `PSCustomData`, which accepts a key as a `String `and value of `Any`.
+
+Example adding your own custom data:
+
+```swift
+var customData = PSCustomData()
+customData.firstName = firstNameText
+customData.lastName = lastNameText
+customData.add(withKey: "myCustomKey", value: "myCustomValue")
+customData.add(withKey: "mySecondCustomKey", value: "mySecondCustomValue")
+```
+
+You can also remove a previously add key and value by using the method `remove(forKey key: String)`, which removes the value based on the key you previously used.

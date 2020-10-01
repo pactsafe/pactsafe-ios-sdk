@@ -6,6 +6,8 @@
 //
 
 import Foundation
+
+#if canImport(UIKit)
 import UIKit
 
 /// Methods for managing events around the `PSAcceptanceViewController`.
@@ -16,7 +18,7 @@ import UIKit
     @objc optional func errorLoadingGroup(error: Error?)
 }
 
-@available(iOS 11.0, *)
+@available(iOS 10.0, *)
 public class PSAcceptanceViewController: UIViewController {
     
     // MARK: - Properties
@@ -163,7 +165,6 @@ public class PSAcceptanceViewController: UIViewController {
     /// the change summary if availlable.
     private func changeSummary(groupData: PSGroup?) -> String {
         guard let groupData = groupData else { return "" }
-        
         guard let contractsData = groupData.contractData else { return "" }
         
         var changeSummaryString: String = ""
@@ -210,9 +211,13 @@ public class PSAcceptanceViewController: UIViewController {
     }
     
     private func setupConstraints() {
+        if #available(iOS 11.0, *) {
+            contractsView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 16).isActive = true
+        } else {
+            contractsView.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 16).isActive = true
+        }
         NSLayoutConstraint.activate([
             // Set up Contracts View
-            contractsView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 16),
             contractsView.leftAnchor.constraint(equalTo: self.view.leftAnchor, constant: 0),
             contractsView.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: 0),
             contractsView.bottomAnchor.constraint(equalTo: self.checkboxAgreementView.topAnchor, constant: 16),
@@ -245,7 +250,7 @@ public class PSAcceptanceViewController: UIViewController {
     
 }
 
-@available(iOS 11.0, *)
+@available(iOS 10.0, *)
 extension PSAcceptanceViewController: PSClickWrapViewDelegate {
     public func clickWrapRendered(withGroup groupData: PSGroup) {
         DispatchQueue.main.async {
@@ -255,4 +260,9 @@ extension PSAcceptanceViewController: PSClickWrapViewDelegate {
     public func errorLoadingGroup(error: Error?) {
         self.delegate?.errorLoadingGroup?(error: error)
     }
+    public func errorSendingAgreed(error: Error?) {
+        self.delegate?.errorSendingAcceptance?(error: error)
+    }
 }
+
+#endif

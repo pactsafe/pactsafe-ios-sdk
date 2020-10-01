@@ -5,8 +5,8 @@
 //  Created by Tim Morse on 1/3/20.
 //
 
+#if canImport(UIKit)
 import UIKit
-
 
 /// Custom version of the submit button used in the SDK.
 public class PSSubmitButton: UIButton {
@@ -28,3 +28,4 @@ public class PSSubmitButton: UIButton {
         self.setBackgroundImage(image(withColor: color), for: state)
     }
 }
+#endif

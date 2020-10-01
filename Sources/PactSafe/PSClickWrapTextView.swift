@@ -5,6 +5,8 @@
 //  Created by Tim Morse on 2/4/20.
 //
 
+#if canImport(UIKit)
+
 import UIKit
 
 public class PSClickWrapTextView: UITextView {
@@ -25,3 +27,4 @@ public class PSClickWrapTextView: UITextView {
         }
     }
 }
+#endif

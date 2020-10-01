@@ -5,11 +5,13 @@
 //  Created by Tim Morse  on 10/7/19.
 //
 
+#if canImport(UIKit)
 import UIKit
 
 public protocol PSClickWrapViewDelegate: AnyObject {
     func clickWrapRendered(withGroup groupData: PSGroup)
     func errorLoadingGroup(error: Error?)
+    func errorSendingAgreed(error: Error?)
 }
 
 extension PSClickWrapViewDelegate {
@@ -53,7 +55,7 @@ public class PSClickWrapView: UIView {
     }
     
     private func setupView() {
-        translatesAutoresizingMaskIntoConstraints = false
+        self.translatesAutoresizingMaskIntoConstraints = false
 
         // Configure Checkbox
         checkbox.translatesAutoresizingMaskIntoConstraints = false
@@ -74,19 +76,35 @@ public class PSClickWrapView: UIView {
         textView.isScrollEnabled = false
     }
     
-    // TODO: change filterContractsById to contractIds with filter parameter
+    
+    /// Load specified Group using a Group key.
+    /// - Parameters:
+    ///   - groupKey: The Group key for loading a PactSafe group.
+    ///   - filterContractsById: Optionally, filter the group by contract IDs.
     public func loadContracts(withGroupKey groupKey: String,
                               filterContractsById: [String]? = []) {
         
         ps.loadGroup(groupKey: groupKey) { (groupData, error) in
+            
+            if let loadGroupError = error {
+                self.delegate?.errorLoadingGroup(error: loadGroupError)
+                return
+            }
+            
             guard let groupData = groupData else {
+                self.delegate?.errorLoadingGroup(error: PSErrorMessages.noGroupDataError)
                 return
             }
             
             self.groupData = groupData
             
-            let acceptanceLanguage = groupData.acceptanceLanguage
-            let acceptanceLanguageToReturn = self.clean(acceptanceLanguage, remove: "{{contracts}}")
+            if let overrideLanguage = self.overrideAcceptanceLanguage {
+                self.textView.attributedText = overrideLanguage
+                self.delegate?.clickWrapRendered(withGroup: groupData)
+                return
+            }
+            
+            let acceptanceLanguageToReturn = self.clean(groupData.acceptanceLanguage, remove: "{{contracts}}")
             
             let contractsLinked: NSMutableAttributedString = NSMutableAttributedString()
             var index = 0
@@ -129,10 +147,18 @@ public class PSClickWrapView: UIView {
         }
     }
     
+    
+    /// Send an Agreed activity for the specified SIgner.
+    /// - Parameters:
+    ///   - signer: The Signer for the agreed event.
+    ///   - completion: Completion handler with optional error message if an error occurs.
     public func sendAgreed(signer: PSSigner,
                            completion: @escaping (_ error: Error?) -> Void) {
-        
-        guard let groupData = self.groupData else { return }
+        guard let groupData = self.groupData else {
+            self.delegate?.errorSendingAgreed(error: PSErrorMessages.sendAgreedError)
+            completion(PSErrorMessages.sendAgreedError)
+            return
+        }
         ps.sendActivity(.agreed, signer: signer, group: groupData) { (error) in
             completion(error)
         }
@@ -157,20 +183,18 @@ public class PSClickWrapView: UIView {
     
     private func setupContraints() {
         NSLayoutConstraint.activate([
-            checkbox.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8.0),
+            checkbox.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 8.0),
             checkbox.heightAnchor.constraint(equalToConstant: 25.0),
             checkbox.widthAnchor.constraint(equalToConstant: 25.0),
-            checkbox.centerYAnchor.constraint(equalTo: centerYAnchor),
+            checkbox.centerYAnchor.constraint(equalTo: self.textView.centerYAnchor),
             
             textView.leadingAnchor.constraint(equalTo: checkbox.trailingAnchor, constant: 8.0),
-            textView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 8.0),
-            textView.topAnchor.constraint(equalTo: topAnchor, constant: 0.0),
-            textView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: 0.0)
+            textView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 8.0),
+            textView.topAnchor.constraint(equalTo: self.topAnchor, constant: 8.0),
+            textView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -8.0),
         ])
         checkbox.setContentHuggingPriority(UILayoutPriority.required, for: .horizontal)
     }
     
-
 }
-
-
+#endif

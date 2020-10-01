@@ -10,24 +10,30 @@ import Foundation
 @available(iOS 10.0, *)
 
 /// The entry point of the PSApp SDK, which is accessible via the `shared` instance.
-public class PSApp {
+public final class PSApp {
     
     // MARK: - Properties
-    
     /// The URLSession that can be overriden before interacting with any methods.
     public var session: URLSession = URLSession.shared
     
+    /// The PactSafe Site Access ID.
     public var siteAccessId: String?
     
-    /// When `testMode` is set to true, data sent to PactSafe can be deleted witin the PactSafe app dashboard.
+    /// When `testMode` is set to true, data sent to PactSafe can be deleted witin the PactSafe dashboard.
     public var testMode: Bool = false
     
-    /// When set to true, additional errors will be printed from the device.
+    /// When set to true, additional errors will be printed.
     public var debugMode: Bool = false
     
+    /// Queue created specifically due to Clickwrap potentially being rendered by user interaction or initiation.
     private let queue = DispatchQueue(label: "PactSafeNetworking", qos: .userInitiated, attributes: .concurrent, autoreleaseFrequency: .inherit, target: .global())
     
-    private var preloaded: Bool = false
+    /// Whether a group was preloaded or not.
+    /// Note: this does not guarantee group data exists in memory.
+    public var preloaded: Bool = false
+    
+    /// Result handler using the Result enum. Returns Data on Success  Error.
+    private typealias DataHandler = (Result<Data, Error>) -> Void
     
     /// The shared instance of PSApp class.
     public static let shared: PSApp = {
@@ -36,36 +42,60 @@ public class PSApp {
     }()
     
     // MARK: -  Initializer
-    private init( ) {}
+    private init() {}
     
+    /// Configure the PactSafe App using the PactSate Site Access ID.
+    /// - Parameter siteAccessId: The PactSafe Site Access ID found in your PactSafe Site settings.
     public func configure(siteAccessId: String) {
         self.siteAccessId = siteAccessId
     }
     
-    // MARK: - Preload Group Data
+    // MARK: - Methods
     
-    public func preload(withGroupKey groupKey: String) {
+    /// Preload PactSafe Group data into memory. This does not guarantee data stays within memory.
+    /// - Parameters:
+    ///   - groupKey: The Group key for the Group data you want to load.
+    ///   - refreshCacheData: Whether you want to refresh data that has potentially been cached previously by prior use of this method.
+    ///   - completion: Optional completion handler indicating whether the Group has preloaded or not.
+    public func preload(withGroupKey groupKey: String,
+                        refreshCacheData: Bool = false,
+                        completion: ((Bool) -> ())? = nil) {
         
         assertSetup()
         
         let urlComponents = groupUrlComponents(groupKey: groupKey)
-        guard let url = urlComponents.url else {
-            if self.debugMode { debugPrint(PSErrorMessages.constructUrlError) }
-            return
-        }
-        
-        getData(fromURL: url, cacheData: true) { (result) in
-            switch result {
-            case .success:
-                self.preloaded = true;
-            case .failure:
-                return
+        if let url = urlComponents.url {
+            getData(fromURL: url, tryCache: !refreshCacheData, cacheResponse: true) { (result) in
+                switch result {
+                case .success:
+                    self.preloaded = true;
+                    if let completion = completion {
+                        completion(true)
+                    }
+                case .failure(let error):
+                    self.printDebug(error)
+                    self.preloaded = false
+                    if let completion = completion {
+                        completion(false)
+                    }
+                }
+            }
+        } else {
+            printDebug(PSErrorMessages.constructUrlError)
+            if let completion = completion {
+                completion(false)
             }
         }
     }
     
-    // MARK: - Activity API Methods
-    
+    /// Send an Activity to the PactSafe platform.
+    /// - Parameters:
+    ///   - type: The type of Activity to be sent.
+    ///   - signer: A unique ID for the Signer.
+    ///   - group: The Group Data that includes information about the contract(s) and associated version(s).
+    ///   - connectionData: Additional data that gets sent as part of the Activity for the record.
+    ///   - testMode: Whether to send the Activity in test mode or not.
+    ///   - completion: A completion handler that notifies you when the Activity has sent. If an error occurs, it will be returned as part of the handler.
     public func sendActivity(_ type: PSActivityEvent,
                              signer: PSSigner,
                              group: PSGroup,
@@ -88,25 +118,25 @@ public class PSApp {
             URLQueryItem(name: "vid", value: group.contractVersions),
             URLQueryItem(name: "gid", value: "\(group.id)"),
             URLQueryItem(name: "cnf", value: group.confirmationEmail.description),
-            URLQueryItem(name: "tm", value: self.testMode.description),
-            URLQueryItem(name: "sid", value: self.siteAccessId)
+            URLQueryItem(name: "tm", value: testMode.description),
+            URLQueryItem(name: "sid", value: siteAccessId)
         ]
         
         let connectionData = connectionData.urlQueryItems()
         urlComponents.queryItems = activityParameters + connectionData
         
-        guard let url = urlComponents.url else {
-            if self.debugMode { debugPrint(PSErrorMessages.constructUrlError) }
-            return
-        }
-        
-        sendData(with: url) { (result) in
-            switch result {
-            case .success:
-                completion(nil)
-            case .failure(let error):
-                completion(error)
+        if let url = urlComponents.url {
+            sendData(with: url) { (result) in
+                switch result {
+                case .success:
+                    completion(nil)
+                case .failure(let error):
+                    completion(error)
+                }
             }
+        } else {
+            printDebug(PSErrorMessages.constructUrlError)
+            completion(PSErrorMessages.constructUrlError)
         }
     }
     
@@ -123,6 +153,77 @@ public class PSApp {
         
         assertSetup()
         
+        let urlComponents = latestUrlComponents(signerId: signerId, groupKey: groupKey)
+        
+        if let url = urlComponents.url {
+            getData(fromURL: url) { (result) in
+                var needsAcceptance: Bool = false
+                var contractIdsNeedAcceptance: [String] = []
+                switch result {
+                case .success(let data):
+                    do {
+                        if let dicData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Bool] {
+                            dicData.forEach { (id, accepted) in
+                                if !accepted {
+                                    needsAcceptance = true
+                                    contractIdsNeedAcceptance.append(id)
+                                }
+                            }
+                            completion(needsAcceptance, contractIdsNeedAcceptance)
+                        } else {
+                            self.printDebug(PSErrorMessages.jsonSerializationError)
+                        }
+                    } catch {
+                        self.printDebug(error)
+                        completion(needsAcceptance, nil)
+                    }
+                case .failure(let error):
+                    self.printDebug(error)
+                    completion(needsAcceptance, contractIdsNeedAcceptance)
+                }
+            }
+        } else {
+            printDebug(PSErrorMessages.constructUrlError)
+            completion(false, nil)
+        }
+    }
+    
+    
+    /// Retrieve Group data using a Group Key.
+    /// - Parameters:
+    ///   - groupKey: The Group Key for the Group you want to load.
+    ///   - completion: A completion handler that returns Group data or an error if an error occurs.
+    public func loadGroup(groupKey: String,
+                          completion: @escaping(_ group: PSGroup?, _ error: Error?) -> Void) {
+        
+        assertSetup()
+        
+        let urlComponents = groupUrlComponents(groupKey: groupKey)
+        
+        if let url = urlComponents.url {
+            getData(fromURL: url) { (result) in
+                switch result {
+                case .success(let data):
+                    do {
+                        let decodedData = try JSONDecoder().decode(PSGroup.self, from: data)
+                        completion(decodedData, nil)
+                    } catch {
+                        self.printDebug(error)
+                        completion(nil, error)
+                    }
+                case .failure(let error):
+                    self.printDebug(error)
+                    completion(nil, error)
+                }
+            }
+        } else {
+            printDebug(PSErrorMessages.constructUrlError)
+            completion(nil, PSErrorMessages.constructUrlError)
+        }
+    }
+    
+    // MARK: - Private Methods
+    private func latestUrlComponents(signerId: PSSignerID, groupKey: String) -> URLComponents {
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
         urlComponents.host = PSHostName.activityAPI.rawValue
@@ -130,73 +231,11 @@ public class PSApp {
         urlComponents.queryItems = [
             URLQueryItem(name: "sig", value: signerId),
             URLQueryItem(name: "gkey", value: groupKey),
-            URLQueryItem(name: "tm", value: self.testMode.description),
-            URLQueryItem(name: "sid", value: self.siteAccessId)
+            URLQueryItem(name: "tm", value: testMode.description),
+            URLQueryItem(name: "sid", value: siteAccessId)
         ]
-        
-        guard let url = urlComponents.url else {
-            if self.debugMode { debugPrint(PSErrorMessages.constructUrlError) }
-            return
-        }
-        
-        getData(fromURL: url) { (result) in
-            
-            var needsAcceptance: Bool = false
-            var contractIdsNeedAcceptance: [String] = []
-            
-            switch result {
-            case .success(let data):
-                do {
-                    guard let dicData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Bool] else {
-                        if self.debugMode { debugPrint(PSErrorMessages.jsonSerializationError) }
-                        completion(needsAcceptance, nil)
-                        return
-                    }
-                    for (id, accepted) in dicData {
-                        if !accepted {
-                            needsAcceptance = true
-                            contractIdsNeedAcceptance.append(id)
-                        }
-                    }
-                    completion(needsAcceptance, contractIdsNeedAcceptance)
-                } catch {
-                    completion(needsAcceptance, nil)
-                }
-            case .failure:
-                completion(needsAcceptance, contractIdsNeedAcceptance)
-            }
-            
-        }
+        return urlComponents
     }
-    
-    public func loadGroup(groupKey: String,
-                          completion: @escaping(_ group: PSGroup?, _ error: Error?) -> Void) {
-        
-        assertSetup()
-        
-        let urlComponents = groupUrlComponents(groupKey: groupKey)
-        guard let url = urlComponents.url else {
-            if self.debugMode { debugPrint(PSErrorMessages.constructUrlError) }
-            return
-        }
-        
-        getData(fromURL: url) { (result) in
-            switch result {
-            case .success(let data):
-                do {
-                    let decodedData = try JSONDecoder().decode(PSGroup.self, from: data)
-                    completion(decodedData, nil)
-                } catch {
-                    completion(nil, error)
-                }
-                
-            case .failure(let error):
-                completion(nil, error)
-            }
-        }
-    }
-    
-    // MARK: - Private Methods
     
     private func groupUrlComponents(groupKey: String) -> URLComponents {
         var urlComponents = URLComponents()
@@ -204,62 +243,41 @@ public class PSApp {
         urlComponents.host = PSHostName.activityAPI.rawValue
         urlComponents.path = "/load/json"
         urlComponents.queryItems = [
-            URLQueryItem(name: "sid", value: self.siteAccessId),
+            URLQueryItem(name: "sid", value: siteAccessId),
             URLQueryItem(name: "gkey", value: groupKey)
         ]
         return urlComponents
     }
 
     // MARK: Request Generation
-    
-    fileprivate func urlRequest(fromURL url: URL,
-                                cacheData: Bool = false) {
-        var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = "GET"
-        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    }
-
-    fileprivate func getData(fromURL url: URL,
-                             cacheData: Bool = false,
-                             completion: @escaping (Result<Data, Error>) -> Void) {
+    private func getData(fromURL url: URL,
+                         tryCache: Bool = false,
+                         cacheResponse: Bool = false,
+                         completion: @escaping DataHandler) {
         
         queue.async {
-            
             var urlRequest = URLRequest(url: url)
             urlRequest.httpMethod = "GET"
             urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
             
             let urlCache = URLCache.shared
-            
-            if let cachedResponse = urlCache.cachedResponse(for: urlRequest) {
-                let result: Result<Data, Error>
-                result = .success(cachedResponse.data)
-                DispatchQueue.main.async {
-                    completion(result)
-                }
+            if tryCache, let cachedResponse = urlCache.cachedResponse(for: urlRequest) {
+                completion(.success(cachedResponse.data))
             } else {
                 // Get data for urlRequest and return data or errors to completion handler.
                 let task = self.session.dataTask(with: urlRequest) { data, response, error in
-                    let result: Result<Data, Error>
-                    
                     if let error = error {
-                        if self.debugMode { debugPrint(error as Any) }
-                        result = .failure(error)
+                        self.printDebug(error)
+                        completion(.failure(error))
                     } else if let error = self.error(from: response) {
-                        if self.debugMode { debugPrint(response as Any) }
-                        result = .failure(error)
+                        self.printDebug(response)
+                        completion(.failure(error))
                     } else if let data = data {
-                        result = .success(data)
-                        if cacheData, let response = response {
-                            let cachedResponse = CachedURLResponse(response: response, data: data, userInfo: nil, storagePolicy: .allowedInMemoryOnly)
-                            urlCache.storeCachedResponse(cachedResponse, for: urlRequest)
-                        }
+                        if cacheResponse { self.cacheUrlResponse(urlResponse: response, urlRequest: urlRequest, data: data) }
+                        completion(.success(data))
                     } else {
-                        result = .failure(PSNetworkError.noDataOrError)
-                    }
-                    
-                    DispatchQueue.main.async {
-                        completion(result)
+                        self.printDebug(PSNetworkError.noDataOrError)
+                        completion(.failure(PSNetworkError.noDataOrError))
                     }
                 }
                 task.resume()
@@ -267,37 +285,52 @@ public class PSApp {
         }
     }
 
-    fileprivate func sendData(with url: URL,
-                              completion: @escaping (Result<Data, Error>) -> Void) {
+    private func sendData(with url: URL,
+                          completion: @escaping DataHandler) {
         
         queue.async {
-            
             var urlRequest = URLRequest(url: url)
             urlRequest.httpMethod = "POST"
             urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            
+
             // Send data for URLRequest and return data or errors to completion handler.
             let task = self.session.dataTask(with: urlRequest) { data, response, error in
-                let result: Result<Data, Error>
-                
                 if let error = error {
-                    if self.debugMode { debugPrint(error as Any)}
-                    result = .failure(error)
+                    self.printDebug(error)
+                    completion(.failure(error))
                 } else if let error = self.error(from: response) {
-                    if self.debugMode { debugPrint(response as Any)}
-                    result = .failure(error)
+                    self.printDebug(response)
+                    completion(.failure(error))
                 } else if let data = data {
-                    result = .success(data)
+                    completion(.success(data))
                 } else {
-                    result = .failure(PSNetworkError.noDataOrError)
-                }
-                
-                DispatchQueue.main.async {
-                    completion(result)
+                    self.printDebug(PSNetworkError.noDataOrError)
+                    completion(.failure(PSNetworkError.noDataOrError))
                 }
             }
             task.resume()
-            
+        }
+    }
+    
+    private func cacheUrlResponse(urlResponse response: URLResponse?,
+                                  urlRequest: URLRequest,
+                                  data: Data) {
+        let urlCache = URLCache.shared
+        guard let response = response else {
+            printDebug(PSErrorMessages.responseCachingError)
+            return
+        }
+        let cachedResponse = CachedURLResponse(response: response, data: data, userInfo: nil, storagePolicy: .allowedInMemoryOnly)
+        urlCache.storeCachedResponse(cachedResponse, for: urlRequest)
+    }
+    
+    private func printDebug(_ message: Any?) {
+        if self.debugMode, let message = message {
+            if let error = message as? Error {
+                debugPrint(error.localizedDescription)
+            } else {
+                debugPrint(message)
+            }
         }
     }
     
@@ -317,7 +350,7 @@ public class PSApp {
         if statusCode >= 200 && statusCode <= 299 {
             return nil
         } else {
-            return "Invalid server status code: \(statusCode)" as? Error
+            return PSNetworkError.notFoundError
         }
     }
 }

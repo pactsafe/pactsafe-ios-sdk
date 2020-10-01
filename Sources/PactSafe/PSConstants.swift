@@ -35,16 +35,59 @@ public enum PSClickWrapStyle: String {
 }
 
 /// The error messages used throughout the PactSafe SDK.
-enum PSErrorMessages: String {
-    case constructUrlError = "Error constructing URL."
-    case sendActivitySendError = "Error sending data."
-    case missingSiteAccesId = "Missing Site Access ID."
-    case decodingError = "Error decoding data."
-    case encodingError = "Error encoding data."
-    case jsonSerializationError = "Error serializing data into JSON."
+enum PSErrorMessages: Error {
+    case constructUrlError
+    case sendActivitySendError
+    case missingSiteAccesId
+    case decodingError
+    case encodingError
+    case jsonSerializationError
+    case responseCachingError
+    case noGroupDataError
+    case sendAgreedError
+}
+
+extension PSErrorMessages: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .constructUrlError:
+            return NSLocalizedString("Error constructing URL.", comment: "")
+        case .sendActivitySendError:
+            return NSLocalizedString("Error sending data.", comment: "")
+        case .missingSiteAccesId:
+            return NSLocalizedString("Missing Site Access ID.", comment: "")
+        case .decodingError:
+            return NSLocalizedString("Error decoding data.", comment: "")
+        case .encodingError:
+            return NSLocalizedString("Error encoding data.", comment: "")
+        case .jsonSerializationError:
+            return NSLocalizedString("Error serializing data into JSON.", comment: "")
+        case .responseCachingError:
+            return NSLocalizedString("Issue caching URLResponse.", comment: "")
+        case .noGroupDataError:
+            return NSLocalizedString("Error loading group data.", comment: "")
+        case .sendAgreedError:
+            return NSLocalizedString("Error sending an agreed activity to PactSafe.", comment: "")
+        }
+    }
 }
 
 /// Networking error messages.
 enum PSNetworkError: Error {
     case noDataOrError
+    case notFoundError
+    case preloadFailed
+}
+
+extension PSNetworkError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .noDataOrError:
+            return NSLocalizedString("Networking error.", comment: "")
+        case .notFoundError:
+            return NSLocalizedString("Object not found", comment: "")
+        case .preloadFailed:
+            return NSLocalizedString("Preloading failed.", comment: "")
+        }
+    }
 }
