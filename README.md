@@ -1,29 +1,47 @@
-![PactSafe Logo](Additional%20Documentation/images/pactsafe-logo.png)
+![Ironclad Logo](Additional%20Documentation/images/ironclad-logo.png)
 
 
-
-# iOS SDK
-
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Notes Before Getting Started](#notes-before-getting-started)
-- [Configure and Initalize the PactSafe SDK](#configure-and-initalize-the-pactsafe-sdk)
-- [PSClickWrapView](#psclickwrapview)
-	- [Preloading Clickwrap Data](#preloading-clickwrap-data)
-	- [Loading Your Clickwrap](#loading-your-clickwrap)
-		- [Interface Builder](#interface-builder)
-		- [Programmatically](#programmatically)
-		- [Configure Contracts Link Tap Behavior](#configure-contracts-link-tap-behavior)
-		- [Check if Checkbox is Selected](#check-if-checkbox-is-selected)
-		- [Sending Acceptance](#sending-acceptance)
-- [Checking Acceptance](#checking-acceptance)
-	- [Using the signedStatus Method](#using-the-signedstatus-method)
-	- [Using the PSAcceptanceViewController](#using-the-psacceptanceviewcontroller)
-	- [Using signedStatus Method and Present Alert](#using-signedstatus-method-and-present-alert)
-- [Sending Activity Manually](#sending-activity-manually)
-- [Customizing Acceptance Data](#customizing-acceptance-data)
-	- [Connection Data](#connection-data)
-	- [Custom Data](#custom-data)
+# Ironclad Clickwrap iOS SDK
+- [Ironclad Clickwrap iOS SDK](#ironclad-clickwrap-ios-sdk)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+    - [Swift Package Manager](#swift-package-manager)
+    - [CocoaPods](#cocoapods)
+    - [Carthage](#carthage)
+    - [GitHub](#github)
+  - [Notes Before Getting Started](#notes-before-getting-started)
+    - [Demo iOS App](#demo-ios-app)
+    - [Debug Mode](#debug-mode)
+    - [Test Mode](#test-mode)
+    - [Data Types](#data-types)
+  - [Configure and Initialize the Ironclad Clickwrap SDK](#configure-and-initialize-the-ironclad-clickwrap-sdk)
+  - [PSClickWrapView](#psclickwrapview)
+    - [Preloading Clickwrap Data](#preloading-clickwrap-data)
+    - [Loading Your Clickwrap](#loading-your-clickwrap)
+      - [Interface Builder](#interface-builder)
+        - [IBOutlet your Clickwrap](#iboutlet-your-clickwrap)
+        - [Loads Contracts Into Your Clickwrap](#loads-contracts-into-your-clickwrap)
+      - [Programmatically](#programmatically)
+      - [Configure Contracts Link Tap Behavior](#configure-contracts-link-tap-behavior)
+        - [Import Safari Services](#import-safari-services)
+        - [Configure PSClickWrapView UITextView Delegate](#configure-psclickwrapview-uitextview-delegate)
+        - [Implement UITextViewDegate Protocol and Method](#implement-uitextviewdegate-protocol-and-method)
+      - [Check if Checkbox is Selected](#check-if-checkbox-is-selected)
+      - [Sending Acceptance](#sending-acceptance)
+      - [PSClickWrapViewDelegate](#psclickwrapviewdelegate)
+  - [Checking Acceptance](#checking-acceptance)
+    - [Using the signedStatus Method](#using-the-signedstatus-method)
+    - [Using the PSAcceptanceViewController](#using-the-psacceptanceviewcontroller)
+      - [What it Looks Like](#what-it-looks-like)
+      - [Setting It Up](#setting-it-up)
+      - [PSAcceptanceViewControllerDelegate](#psacceptanceviewcontrollerdelegate)
+        - [Receive Notice of Acceptance](#receive-notice-of-acceptance)
+    - [Using signedStatus Method and Present Alert](#using-signedstatus-method-and-present-alert)
+  - [Sending Activity Manually](#sending-activity-manually)
+  - [Customizing Acceptance Data](#customizing-acceptance-data)
+    - [Connection Data](#connection-data)
+    - [Custom Data](#custom-data)
+      - [Adding Additional Custom Data](#adding-additional-custom-data)
 
 
 ## Requirements
@@ -31,20 +49,20 @@
 - Xcode 11 or higher
 - Target iOS 10.0 or higher
 - Swift 5.0+
-- PactSafe Published Contracts in Public Group
-- PactSafe Group Key
-- PactSafe Site Access ID
-- PactSafe API Access
+- Ironclad Clickwrap Published Contracts in Public Group
+- Ironclad Clickwrap Group Key
+- Ironclad Clickwrap Site Access ID
+- Ironclad Clickwrap API Access
 
 ## Installation
 
 ### Swift Package Manager
-You can use the [Swift Package Manager](https://swift.org/package-manager/) to install the PactSafe SDK:
+You can use the [Swift Package Manager](https://swift.org/package-manager/) to install the Ironclad Clickwrap SDK:
 
 https://github.com/pactsafe/pactsafe-ios-sdk.git
 
 ### CocoaPods
-You can use [CocoaPods](http://cocoapods.org/) to install the PactSafe SDK by adding it to your Podfile:
+You can use [CocoaPods](http://cocoapods.org/) to install the Ironclad Clickwrap SDK by adding it to your Podfile:
 
 ```swift
 platform :ios, '10.0'
@@ -56,7 +74,7 @@ end
 ```
 
 ### Carthage
-You can use [Carthage](https://github.com/Carthage/Carthage) to install the PactSafe SDK by adding it to your Cartfile:
+You can use [Carthage](https://github.com/Carthage/Carthage) to install the Ironclad Clickwrap SDK by adding it to your Cartfile:
 
 ```swift
 github "pactSafe/pactsafe-ios-sdk" ~> 1.0.1
@@ -70,7 +88,7 @@ Use the [GitHub repo](https://github.com/pactsafe/pactsafe-ios-sdk) to download 
 ## Notes Before Getting Started
 
 ### Demo iOS App
-As you follow along in this guide, you may want to look at the PactSafe iOS Demo App as an example. You can pull down the [demo app here in GitHub](https://github.com/pactsafe/pactsafe-ios-sdk-demo).
+As you follow along in this guide, you may want to look at the Ironclad Embedded Clickwrap iOS Demo App as an example. You can pull down the [demo app here in GitHub](https://github.com/pactsafe/pactsafe-ios-sdk-demo).
 
 ### Debug Mode
 Something not quite working the way you expect or you need additional information as to what might not be working? Simply enable the `debugMode` property on `PSApp.shared` to print additional information.
@@ -79,7 +97,7 @@ Something not quite working the way you expect or you need additional informatio
 PSApp.shared.debugMode = true
 ```
 ### Test Mode
-Optionally, set `testMode` to true as you are testing your implementation. This allows you to delete test data in your PactSafe site.
+Optionally, set `testMode` to true as you are testing your implementation. This allows you to delete test data in your Ironclad Clickwrap site.
 
 Note: Don't forget to remove this line before you are finished!
 
@@ -94,17 +112,17 @@ Before you start to implement, you will want to become familiar with a few data 
 | Name             | Description                                                  |
 | ---------------- | ------------------------------------------------------------ |
 | PSSignerID       | `PSSignerID` is a typealias for String.                      |
-| PSSigner         | `PSSigner` is a structure that you'll use to send over your signer information. You must include a signer ID (`PSSignerID`) when needing to send data to PactSafe. You can optionally pass over additional custom data with a `PSCustomData` struct, which is covered below. |
+| PSSigner         | `PSSigner` is a structure that you'll use to send over your signer information. You must include a signer ID (`PSSignerID`) when needing to send data to Ironclad Clickwrap. You can optionally pass over additional custom data with a `PSCustomData` struct, which is covered below. |
 | PSCustomData     | `PSCustomData` is a structure that holds additional information about the activity. Please see the properties that are available to be set in the [Customizing Acceptance Data](#customizing-acceptance-data) section. |
-| PSGroup          | `PSGroup` is a structure that holds information about a speciifc group (uses PactSafe group key) that is loaded from the PactSafe API. |
-| PSContract       | `PSContract` is a structure that holds information about contracts within a PactSafe group (`PSGroup`). |
+| PSGroup          | `PSGroup` is a structure that holds information about a speciifc group (uses Ironclad Clickwrap group key) that is loaded from the Ironclad Clickwrap API. |
+| PSContract       | `PSContract` is a structure that holds information about contracts within a Ironclad Clickwrap group (`PSGroup`). |
 | PSConnectionData | The `PSConnectionData` structure holds information about the current connection [Customizing Acceptance Data](#customizing-acceptance-data) section. |
 
 
 
-## Configure and Initalize the PactSafe SDK
+## Configure and Initialize the Ironclad Clickwrap SDK
 
-In order to use the PactSafe SDK, you’ll need to import PactSafe into your UIApplicationDelegate:
+In order to use the Ironclad Clickwrap SDK, you’ll need to import PactSafe into your UIApplicationDelegate:
 
 ```swift
 import PactSafe
@@ -112,7 +130,7 @@ import PactSafe
 
 Using the SDK also requires authentication, which you’ll want to set up in your `application:didFinishLaunchingWithOptions` delegate.
 
-Note: You **<u>must</u>** configure your PactSafe Site Access ID before using the PSApp shared instance!
+Note: You **<u>must</u>** configure your Ironclad Clickwrap Site Access ID before using the PSApp shared instance!
 
 ```swift
 PSApp.shared.configure(siteAccessId: "yourSiteAccessId")
@@ -122,17 +140,17 @@ PSApp.shared.configure(siteAccessId: "yourSiteAccessId")
 
 ## PSClickWrapView
 
-The easiest way of getting started with using the PactSafe clickwrap is by utilizing our PSClickWrapView class to dynamically load your contracts into a UIView. The PSClickWrapView class conforms to the UIView class, which allows you to easily customize and format the clickwrap as needed.
+The easiest way of getting started with using the Ironclad Clickwrap is by utilizing our PSClickWrapView class to dynamically load your contracts into a UIView. The PSClickWrapView class conforms to the UIView class, which allows you to easily customize and format the clickwrap as needed.
 
 ### Preloading Clickwrap Data
 
-Since your `PSClickWrapView` class will load contracts for the specified PactSafe group, you may want to preload the data using your group key before displaying the clickwrap. By preloading, a user will be less likely see loading when they get to the screen that contains the PSClickWrapView.
+Since your `PSClickWrapView` class will load contracts for the specified Ironclad Clickwrap group, you may want to preload the data using your group key before displaying the clickwrap. By preloading, a user will be less likely see loading when they get to the screen that contains the PSClickWrapView.
 
-To preload your PactSafe group data, you can use the `preload` method on the PSApp shared instance within your AppDelegate. Example below:
+To preload your Ironclad Clickwrap group data, you can use the `preload` method on the PSApp shared instance within your AppDelegate. Example below:
 
 ```swift
 // Do this after you configure your PSApp shared instance!
-PSApp.shared.preload(withGroupKey: "example-pactsafe-group-key")
+PSApp.shared.preload(withGroupKey: "example-group-key")
 ```
 
 By using the `preload` method, the data is stored using the iOS URLCache class in memory only.
@@ -141,8 +159,8 @@ By using the `preload` method, the data is stored using the iOS URLCache class i
 
 The PSClickWrapView class is built on top of a UIView, which gives you flexibility in your implementation. You can implement in the following ways:
 
-- **Interface Builder** - add the custom class to a UIView within your storyboard that will load your PactSafe clickwrap.
-- **Programmatically** - programmatically gives you the most flexibility implementing the PactSafe clickwrap into your project. 
+- **Interface Builder** - add the custom class to a UIView within your storyboard that will load your Ironclad Clickwrap.
+- **Programmatically** - programmatically gives you the most flexibility implementing the Ironclad Clickwrap into your project. 
 
 #### Interface Builder
 With an empty view in your storyboard, simply subclass the UIView with the PSClickWrapView class. Once you subclass the UIView, you’ll need to do some configuring of the ClickWrap within your view controller.
@@ -153,7 +171,7 @@ With an empty view in your storyboard, simply subclass the UIView with the PSCli
 Make sure to create an IBOutlet to your PSClickWrapView UIView in order to customize it.
 
 ##### Loads Contracts Into Your Clickwrap
-In order to get contracts to load into your clickwrap, you’ll need to use the `loadContracts` method, where you'll pass in your PactSafe group key.
+In order to get contracts to load into your clickwrap, you’ll need to use the `loadContracts` method, where you'll pass in your Ironclad Clickwrap group key.
 
 ```swift
 override func viewWillAppear(_ animated: Bool) {
@@ -286,7 +304,7 @@ We provide a few of ways checking acceptance and optionally presenting informati
 
 ### Using the signedStatus Method
 
-The `signedStatus` method gives you the opportuntiy to check on the status of acceptance within a specific PactSafe group.
+The `signedStatus` method gives you the opportunity to check on the status of acceptance within a specific Ironclad Clickwrap group.
 
 ```swift
 let signerId = "test@pactafe.com"
@@ -303,7 +321,7 @@ ps.signedStatus(for: signerId, groupKey: psGroupKey) { (needsAcceptance, contrac
 ```
 
 ### Using the PSAcceptanceViewController
-You can optionally choose to utilize the `PSAcceptanceViewController` in order to conveniently present to your users which contracts had major changes, what the changes were (if change summary is provided within PactSafe), and an opportunity to accept them.
+You can optionally choose to utilize the `PSAcceptanceViewController` in order to conveniently present to your users which contracts had major changes, what the changes were (if change summary is provided within Ironclad Clickwrap), and an opportunity to accept them.
 
 #### What it Looks Like
 We provide a simple implementation that can be easily customized to incorporate your brand styling. More on styling later in the documentation.
@@ -315,8 +333,8 @@ We provide a simple implementation that can be easily customized to incorporate 
 // Set up your PSApp.shared instance for use.
 let ps = PSApp.shared
 
-// Set the PactSafe group key you plan to check.
-let groupKey: String = "my-pactsafe-group-key"
+// Set the Ironclad Clickwrap group key you plan to check.
+let groupKey: String = "example-group-key"
 
 /**
  * Use the signedStatus method to get acceptance information.
@@ -350,7 +368,7 @@ Available methods when you adopt to the protocol:
 | `receivedAcceptance()`                  | Triggered when a successful submission of acceptance has been sent. | Yes      |
 | `errorSendingAcceptance(error: Error?)` | Triggered when there's an issue with sending acceptance.     | Yes      |
 | `checkboxIsSelected(_ checked: Bool)`   | Triggered when the checkbox is checked or unchecked.         | Yes      |
-| `errorLoadingGroup(error: Error?)`      | Triggered when there's an error loading the PactSafe group for the `PSClickWrapView`. | Yes      |
+| `errorLoadingGroup(error: Error?)`      | Triggered when there's an error loading the Ironclad Clickwrap group for the `PSClickWrapView`. | Yes      |
 
 
 
@@ -406,7 +424,6 @@ private func showContractUpdates(forSignerId signerId: String,
         self.present(alert, animated: true, completion: nil)
         }
     }
-}
 ```
 
 By getting these details and using a UIAlertController, you could show an alert for the user that there have been updated terms and provide them a few available actions.
@@ -421,7 +438,7 @@ By getting these details and using a UIAlertController, you could show an alert 
 
 ## Sending Activity Manually
 
-There may be times when you need to send an activity event manually. Doing so just requires using the `sendActivity` method on your PactSafe shared instance.
+There may be times when you need to send an activity event manually. Doing so just requires using the `sendActivity` method on your Ironclad Clickwrap shared instance.
 
 Here's an example method that would allow you to send acceptance:
 
@@ -439,7 +456,7 @@ func send(for signer: PSSigner) {
 
 ## Customizing Acceptance Data
 
-By default, when you send an activity event with the SDK, some additional information about the device will be sent to PactSafe.
+By default, when you send an activity event with the SDK, some additional information about the device will be sent to Ironclad Clickwrap.
 
 There are two parts of data that will be sent as part of the activity event, which you may want to reference as you are implementing the SDK.
 
@@ -447,7 +464,7 @@ There are two parts of data that will be sent as part of the activity event, whi
 - Custom Data
 
 ### Connection Data
-Below, you'll find information on what to expect the SDK to send over as part of the activity event as "Connection Data", which is viewable within a PactSafe activity record. Many of the properties are set upon initialization except the optional properties (marked optional below) and use the following Apple APIs: `UIDevice`, `Locale`, and `TimeZone`. If you need further information about these properties, please reach out to us directly.
+Below, you'll find information on what to expect the SDK to send over as part of the activity event as "Connection Data", which is viewable within a Ironclad Clickwrap activity record. Many of the properties are set upon initialization except the optional properties (marked optional below) and use the following Apple APIs: `UIDevice`, `Locale`, and `TimeZone`. If you need further information about these properties, please reach out to us directly.
 
 | Property                | Description                                                  | Overridable |
 | ----------------------- | ------------------------------------------------------------ | ----------- |
@@ -462,7 +479,7 @@ Below, you'll find information on what to expect the SDK to send over as part of
 | `pageDomain` (Optional) | The domain of the page being viewed. *Note: This is normally for web pages but is available to be populated if needed.* | Yes         |
 | `pagePath` (Optional)   | The path of the page being viewed. *Note: This is normally for web pages but is available to be populated if needed.* | Yes         |
 | `pageQuery` (Optional)  | The query path on the page being viewed. *Note: This is normally for web pages but is available to be populated if needed.* | Yes         |
-| `pageTitle` (Optional)  | The title of the page being viewed. *Note: This is normally for web pages but is available to be populated if you'd like to use the title of the screen where the PactSafe activity is occurring.* | Yes         |
+| `pageTitle` (Optional)  | The title of the page being viewed. *Note: This is normally for web pages but is available to be populated if you'd like to use the title of the screen where the Ironclad Clickwrap activity is occurring.* | Yes         |
 | `pageUrl` (Optional)    | The URL of the page being viewed. Note: This is normally for web pages but is available to be populated if needed. | Yes         |
 | `referrer` (Optional)   | The referred of the page being viewed. *Note: This is normally for web pages but is avaialble to be populated if needed.* | Yes         |
 
@@ -470,16 +487,16 @@ Below, you'll find information on what to expect the SDK to send over as part of
 
 ### Custom Data
 
-Custom Data can hold additional information that you'd like to pass over that will be appended to the activity event. By adding Custom Data to the event, you'll be able to search and filter within the PactSafe web app, which is especially beneficial when you have many activity events.
+Custom Data can hold additional information that you'd like to pass over that will be appended to the activity event. By adding Custom Data to the event, you'll be able to search and filter within the Ironclad Clickwrap web app, which is especially beneficial when you have many activity events.
 
-Before sending an activity event, you may want to customize properties on `PSCustomData` that can be set. Please note that properties such as `firstName`, `lastName`, `companyName`, and `title` that are reserved properties on `PSCustomData` for PactSafe platform usage only (e.g., seeing the name of an individual within the PactSafe app) but can be set by you.
+Before sending an activity event, you may want to customize properties on `PSCustomData` that can be set. Please note that properties such as `firstName`, `lastName`, `companyName`, and `title` are reserved properties on `PSCustomData` for Ironclad Clickwrap platform usage only (e.g., seeing the name of an individual within the Ironclad Clickwrap app) but can be set by you.
 
 | Property        | Description                                                  | Overridable |
 | --------------- | ------------------------------------------------------------ | ----------- |
-| `firstName`     | First Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
-| `lastName`      | Last Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
-| `companyName`   | Company Name is a reserved property for custom data in PactSafe but can be set. | Yes         |
-| `title`         | Title is a reserved property for custom data in PactSafe but can be set. | Yes         |
+| `firstName`     | First Name is a reserved property for custom data in Ironclad Clickwrap but can be set. | Yes         |
+| `lastName`      | Last Name is a reserved property for custom data in Ironclad Clickwrap but can be set. | Yes         |
+| `companyName`   | Company Name is a reserved property for custom data in Ironclad Clickwrap but can be set. | Yes         |
+| `title`         | Title is a reserved property for custom data in Ironclad Clickwrap but can be set. | Yes         |
 
 #### Adding Additional Custom Data
 
