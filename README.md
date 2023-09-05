@@ -1,9 +1,7 @@
 ![Ironclad Logo](Additional%20Documentation/images/ironclad-logo.png)
 
 
-
 # Ironclad Clickwrap iOS SDK
-
 - [Ironclad Clickwrap iOS SDK](#ironclad-clickwrap-ios-sdk)
   - [Requirements](#requirements)
   - [Installation](#installation)
@@ -116,7 +114,7 @@ Before you start to implement, you will want to become familiar with a few data 
 | PSSignerID       | `PSSignerID` is a typealias for String.                      |
 | PSSigner         | `PSSigner` is a structure that you'll use to send over your signer information. You must include a signer ID (`PSSignerID`) when needing to send data to Ironclad Clickwrap. You can optionally pass over additional custom data with a `PSCustomData` struct, which is covered below. |
 | PSCustomData     | `PSCustomData` is a structure that holds additional information about the activity. Please see the properties that are available to be set in the [Customizing Acceptance Data](#customizing-acceptance-data) section. |
-| PSGroup          | `PSGroup` is a structure that holds information about a speciifc group (uses Ironclad Clickwrap group key) that is loaded from the PactSafe API. |
+| PSGroup          | `PSGroup` is a structure that holds information about a speciifc group (uses Ironclad Clickwrap group key) that is loaded from the Ironclad Clickwrap API. |
 | PSContract       | `PSContract` is a structure that holds information about contracts within a Ironclad Clickwrap group (`PSGroup`). |
 | PSConnectionData | The `PSConnectionData` structure holds information about the current connection [Customizing Acceptance Data](#customizing-acceptance-data) section. |
 
@@ -491,7 +489,7 @@ Below, you'll find information on what to expect the SDK to send over as part of
 
 Custom Data can hold additional information that you'd like to pass over that will be appended to the activity event. By adding Custom Data to the event, you'll be able to search and filter within the Ironclad Clickwrap web app, which is especially beneficial when you have many activity events.
 
-Before sending an activity event, you may want to customize properties on `PSCustomData` that can be set. Please note that properties such as `firstName`, `lastName`, `companyName`, and `title` that are reserved properties on `PSCustomData` for Ironclad Clickwrap platform usage only (e.g., seeing the name of an individual within the Ironclad app) but can be set by you.
+Before sending an activity event, you may want to customize properties on `PSCustomData` that can be set. Please note that properties such as `firstName`, `lastName`, `companyName`, and `title` are reserved properties on `PSCustomData` for Ironclad Clickwrap platform usage only (e.g., seeing the name of an individual within the Ironclad Clickwrap app) but can be set by you.
 
 | Property        | Description                                                  | Overridable |
 | --------------- | ------------------------------------------------------------ | ----------- |
